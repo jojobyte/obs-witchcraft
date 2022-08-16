@@ -1,15 +1,22 @@
 {
-  "name": "obs-spells",
+  "name": "obs-witchcraft",
   "version": "0.0.1",
-  "description": "",
+  "description": "A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "lite-reload html --port=8080"
+    "start": "lite-reload spells --port=8080"
   },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/jojobyte"
+    },
+    "https://ko-fi.com/jojobyte",
+    "https://liberapay.com/jojobyte/"
+  ],
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "jojobyte <jojobyte@0t.lc> (https://jojo.io/)",
   "devDependencies": {
     "lite-reload": "^1.0.2"
   }
