@@ -28,10 +28,13 @@
       color: white;
     }
     #controls {
+      background-color: #222;
       display: none;
       justify-content: center;
       flex-direction: column;
       align-items: center;
+      margin-top: 5vh;
+      padding: 1rem;
     }
     #controls span {
       font-size: 5em;
@@ -39,18 +42,23 @@
     #controls input[type=range] {
       display: block;
       width: 100%;
-      height: 20vh;
+      height: 5vh;
       font-size: 5em;
     }
-    #controls button[name=start_stop] {
-      display: block;
-      font-size: 3em;
+    #controls button{
+      display: inline-block;
+      font-size: 2em;
       padding: .5rem 1rem;
-      background: limegreen;
       border: 0 solid transparent;
     }
-    #controls button.stop[name=start_stop] {
+    #controls button[name=start_pause] {
+      background: limegreen;
+    }
+    #controls button[name=reset] {
       background: red;
+    }
+    #controls button.pause[name=start_pause] {
+      background: orange;
     }
     #controls:target {
       display: flex;
@@ -61,14 +69,15 @@
   <h1>This should be Countdown!!!!!</h1>
 
   <div id="controls">
-    <input type="range" max="1800000" /> <!-- 30 mins = 1800000 -->
+    <input type="range" step="5000" max="1800000" /> <!-- 30 mins = 1800000 -->
     <span></span>
-    <button name="start_stop">Start / Stop</button>
+    <div>
+      <button name="start_pause">Start / Pause</button>
+      <button name="reset">Reset</button>
+    </div>
   </div>
 
-  <div id="console"></div>
-
-  <script>
+  <script type="module">
     if (!localStorage.getItem('countdown')) {
       localStorage.setItem('countdown', 5 * 60 * 1000)
     }
@@ -77,15 +86,21 @@
       localStorage.setItem('countdownRun', false)
     }
 
+    let bc = new BroadcastChannel('countdown')
     let storeCountdown = localStorage.getItem('countdown')
     let storeRunning = JSON.parse(localStorage.getItem('countdownRun'))
     let countdownElement = document.getElementsByTagName('h1')
     let inputElement = document.querySelector('#controls input')
     let inputValueElement = document.querySelector('#controls span')
-    let buttonElement = document.querySelector('#controls button[name=start_stop]')
+    let toggleButtonElement = document.querySelector('#controls button[name=start_pause]')
+    let resetButtonElement = document.querySelector('#controls button[name=reset]')
     let countdownInterval
 
     function updateCountdown() {
+      if (!storeRunning) {
+        return clearInterval(countdownInterval)
+      }
+
       storeCountdown -= 1000;
 
       if (storeCountdown < 0) {
@@ -94,8 +109,8 @@
 
       countdownElement.item(0).textContent = getCountdownText(storeCountdown)
 
-      if (storeCountdown === 0 || !storeRunning) {
-        clearInterval(countdownInterval);
+      if (storeCountdown === 0) {
+        clearInterval(countdownInterval)
       }
     }
 
@@ -112,47 +127,82 @@
       inputValueElement.textContent = getCountdownText(time)
     }
 
-    // let startCountdown = 5 * 60 * 1000
+    function updateButton () {
+      if (storeRunning) {
+        toggleButtonElement.classList.add('pause')
+        return toggleButtonElement.textContent = 'Pause'
+      }
 
-    updateInput(storeCountdown)
+      toggleButtonElement.classList.remove('pause')
+      toggleButtonElement.textContent = 'Start'
+    }
 
-    inputElement.addEventListener('change', event => {
-      localStorage.setItem('countdown', event.target.value)
-      storeCountdown = event.target.value
-      // updateInput(event.target.value)
-      inputValueElement.textContent = getCountdownText(event.target.value)
-      // inputValueElement.textContent = event.target.value
-      // clearInterval(countdownInterval);
-      // countdownInterval = setInterval(updateCountdown, 100)
-    })
-
-    buttonElement.addEventListener('click', event => {
+    function toggleButton () {
       if (storeRunning) {
         localStorage.setItem('countdownRun', false)
         storeRunning = false
-        buttonElement.classList.remove('stop')
-      buttonElement.textContent = 'Start'
         return clearInterval(countdownInterval)
       }
 
       localStorage.setItem('countdownRun', true)
       storeRunning = true
-      buttonElement.classList.add('stop')
-      buttonElement.textContent = 'Stop'
       countdownInterval = setInterval(updateCountdown, 100)
+    }
+
+    function resetButton () {
+      storeCountdown = localStorage.getItem('countdown')
+      localStorage.setItem('countdownRun', false)
+      storeRunning = false
+      clearInterval(countdownInterval)
+      updateButton()
+      countdownElement.item(0).textContent = getCountdownText(storeCountdown)
+    }
+
+    updateInput(storeCountdown)
+
+    inputElement.addEventListener('change', event => {
+      localStorage.setItem('countdown', event.target.value)
+      localStorage.setItem('countdownRun', false)
+      storeCountdown = event.target.value
+      storeRunning = false
+      inputValueElement.textContent = getCountdownText(event.target.value)
+      countdownElement.item(0).textContent = getCountdownText(storeCountdown)
+      updateButton()
+    })
+
+    inputElement.addEventListener('input', event => {
+      // localStorage.setItem('countdown', event.target.value)
+      // storeCountdown = event.target.value
+      inputValueElement.textContent = getCountdownText(event.target.value)
+    })
+
+    toggleButtonElement.addEventListener('click', () => {
+      toggleButton()
+      updateButton()
+      bc.postMessage('toggle')
+    })
+
+    resetButtonElement.addEventListener('click', () => {
+      resetButton()
+      bc.postMessage('reset')
     })
 
     window.addEventListener('storage', (event) => {
-      // console.log('storage', event)
-      // document.querySelector('#console').innerHTML = `${event.key}: ${event.newValue} | ${event.oldValue}`
-      document.querySelector('#console').innerHTML = `${localStorage.getItem('countdown')}<br />${localStorage.getItem('countdownRun')}`
-      storeCountdown = localStorage.getItem('countdown')
       storeRunning = JSON.parse(localStorage.getItem('countdownRun'))
+
+      // storeCountdown = localStorage.getItem('countdown')
 
       if (storeRunning) {
         countdownInterval = setInterval(updateCountdown, 100)
       }
-    });
+    })
+
+    bc.onmessage = (event) => {
+      if (event === 'reset') {
+        resetButton()
+      }
+      // countdownElement.item(0).style.color = 'pink'
+    }
 
     countdownElement.item(0).textContent = getCountdownText(storeCountdown)
 
