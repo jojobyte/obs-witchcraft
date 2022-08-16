@@ -2,6 +2,10 @@
   "name": "obs-witchcraft",
   "version": "0.0.1",
   "description": "A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jojobyte/obs-witchcraft.git"
+  },
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -15,7 +19,16 @@
     "https://ko-fi.com/jojobyte",
     "https://liberapay.com/jojobyte/"
   ],
-  "keywords": [],
+  "keywords": [
+    "html",
+    "css",
+    "javascript",
+    "vanilla.js",
+    "obs",
+    "obs studio",
+    "browser source",
+    "browser dock"
+  ],
   "author": "jojobyte <jojobyte@0t.lc> (https://jojo.io/)",
   "devDependencies": {
     "lite-reload": "^1.0.2"

@@ -16,3 +16,6 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
 5. Open up OBS Studio
    1. Add a new Browser Source and point it to the Node.js server at http://localhost:8080/countdown.html
    2. Open the Docks Menu -> Custom Browser Docks and enter a new value, name it whatever you like, set the url to http://localhost:8080/countdown.html#controls
+
+## References
+ - Part 1 - https://www.youtube.com/watch?v=elhbp_BVCvM
