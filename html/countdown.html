@@ -29,6 +29,9 @@
     }
     #controls {
       display: none;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
     }
     #controls span {
       font-size: 5em;
@@ -39,8 +42,18 @@
       height: 20vh;
       font-size: 5em;
     }
-    #controls:target {
+    #controls button[name=start_stop] {
       display: block;
+      font-size: 3em;
+      padding: .5rem 1rem;
+      background: limegreen;
+      border: 0 solid transparent;
+    }
+    #controls button.stop[name=start_stop] {
+      background: red;
+    }
+    #controls:target {
+      display: flex;
     }
   </style>
 </head>
@@ -50,18 +63,27 @@
   <div id="controls">
     <input type="range" max="1800000" /> <!-- 30 mins = 1800000 -->
     <span></span>
+    <button name="start_stop">Start / Stop</button>
   </div>
 
+  <div id="console"></div>
+
   <script>
+    if (!localStorage.getItem('countdown')) {
+      localStorage.setItem('countdown', 5 * 60 * 1000)
+    }
+
+    if (!localStorage.getItem('countdownRun')) {
+      localStorage.setItem('countdownRun', false)
+    }
+
     let storeCountdown = localStorage.getItem('countdown')
+    let storeRunning = JSON.parse(localStorage.getItem('countdownRun'))
     let countdownElement = document.getElementsByTagName('h1')
     let inputElement = document.querySelector('#controls input')
     let inputValueElement = document.querySelector('#controls span')
+    let buttonElement = document.querySelector('#controls button[name=start_stop]')
     let countdownInterval
-
-    if (!localStorage.getItem('countdown')) {
-      setStorage(5 * 60 * 1000)
-    }
 
     function updateCountdown() {
       storeCountdown -= 1000;
@@ -72,13 +94,9 @@
 
       countdownElement.item(0).textContent = getCountdownText(storeCountdown)
 
-      if (storeCountdown === 0) {
+      if (storeCountdown === 0 || !storeRunning) {
         clearInterval(countdownInterval);
       }
-    }
-
-    function setStorage (startCountdown = 5 * 60 * 1000) {
-      localStorage.setItem('countdown', startCountdown)
     }
 
     function getCountdownText (time) {
@@ -99,7 +117,7 @@
     updateInput(storeCountdown)
 
     inputElement.addEventListener('change', event => {
-      setStorage(event.target.value)
+      localStorage.setItem('countdown', event.target.value)
       storeCountdown = event.target.value
       // updateInput(event.target.value)
       inputValueElement.textContent = getCountdownText(event.target.value)
@@ -107,6 +125,34 @@
       // clearInterval(countdownInterval);
       // countdownInterval = setInterval(updateCountdown, 100)
     })
+
+    buttonElement.addEventListener('click', event => {
+      if (storeRunning) {
+        localStorage.setItem('countdownRun', false)
+        storeRunning = false
+        buttonElement.classList.remove('stop')
+      buttonElement.textContent = 'Start'
+        return clearInterval(countdownInterval)
+      }
+
+      localStorage.setItem('countdownRun', true)
+      storeRunning = true
+      buttonElement.classList.add('stop')
+      buttonElement.textContent = 'Stop'
+      countdownInterval = setInterval(updateCountdown, 100)
+    })
+
+    window.addEventListener('storage', (event) => {
+      // console.log('storage', event)
+      // document.querySelector('#console').innerHTML = `${event.key}: ${event.newValue} | ${event.oldValue}`
+      document.querySelector('#console').innerHTML = `${localStorage.getItem('countdown')}<br />${localStorage.getItem('countdownRun')}`
+      storeCountdown = localStorage.getItem('countdown')
+      storeRunning = JSON.parse(localStorage.getItem('countdownRun'))
+
+      if (storeRunning) {
+        countdownInterval = setInterval(updateCountdown, 100)
+      }
+    });
 
     countdownElement.item(0).textContent = getCountdownText(storeCountdown)
 
