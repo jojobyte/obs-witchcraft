@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown</title>
+  <style>
+    html {
+      width: 100vw;
+      height: 100vh;
+    }
+    html, body {
+      background-color: #111;
+      color: white;
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      font-size: 18px;
+    }
+    h1 {
+      font-family: sans-serif;
+      font-size: 38vw;
+      display: flex;
+      align-items: center;
+      line-height: 1;
+      padding: 0;
+      margin: 0;
+      color: white;
+    }
+    #controls {
+      display: none;
+    }
+    #controls span {
+      font-size: 5em;
+    }
+    #controls input[type=range] {
+      display: block;
+      width: 100%;
+      height: 20vh;
+      font-size: 5em;
+    }
+    #controls:target {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>This should be Countdown!!!!!</h1>
+
+  <div id="controls">
+    <input type="range" max="1800000" /> <!-- 30 mins = 1800000 -->
+    <span></span>
+  </div>
+
+  <script>
+    let storeCountdown = localStorage.getItem('countdown')
+    let countdownElement = document.getElementsByTagName('h1')
+    let inputElement = document.querySelector('#controls input')
+    let inputValueElement = document.querySelector('#controls span')
+    let countdownInterval
+
+    if (!localStorage.getItem('countdown')) {
+      setStorage(5 * 60 * 1000)
+    }
+
+    function updateCountdown() {
+      storeCountdown -= 1000;
+
+      if (storeCountdown < 0) {
+        storeCountdown = 0;
+      }
+
+      countdownElement.item(0).textContent = getCountdownText(storeCountdown)
+
+      if (storeCountdown === 0) {
+        clearInterval(countdownInterval);
+      }
+    }
+
+    function setStorage (startCountdown = 5 * 60 * 1000) {
+      localStorage.setItem('countdown', startCountdown)
+    }
+
+    function getCountdownText (time) {
+      let countdownSeconds = time / 1000
+      let countdownMinutesStr = `${Math.floor(countdownSeconds / 60)}`.padStart(2, '0')
+      let countdownSecondsStr = `${Math.ceil(countdownSeconds % 60)}`.padStart(2, '0')
+
+      return `${countdownMinutesStr}:${countdownSecondsStr}`
+    }
+
+    function updateInput (time) {
+      inputElement.value = time
+      inputValueElement.textContent = getCountdownText(time)
+    }
+
+    // let startCountdown = 5 * 60 * 1000
+
+    updateInput(storeCountdown)
+
+    inputElement.addEventListener('change', event => {
+      setStorage(event.target.value)
+      storeCountdown = event.target.value
+      // updateInput(event.target.value)
+      inputValueElement.textContent = getCountdownText(event.target.value)
+      // inputValueElement.textContent = event.target.value
+      // clearInterval(countdownInterval);
+      // countdownInterval = setInterval(updateCountdown, 100)
+    })
+
+    countdownElement.item(0).textContent = getCountdownText(storeCountdown)
+
+    countdownInterval = setInterval(updateCountdown, 100)
+  </script>
+</body>
+</html>
