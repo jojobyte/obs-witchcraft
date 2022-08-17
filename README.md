@@ -18,13 +18,14 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
    2. Open the Docks Menu -> Custom Browser Docks and enter a new value, name it whatever you like, set the url to http://localhost:8080/countdown.html#controls
 
 ## Todo
+- [ ] Add css transition to Countdown Timer Font Size
 - OBS Studio (streaming tool)
   - Browser Sources (Overlays)
     - [ ] Events
       - [ ] Subscription & Follow notices
       - [ ] Chat
     - [ ] Avatar Animation & Face Tracking
-    - [ ]
+    - [ ] Stream Setup UI
   - Browser Docks (Controls)
     - [ ] Chat Channel Funnel
       - [ ] Twitch
