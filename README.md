@@ -18,16 +18,31 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
    2. Open the Docks Menu -> Custom Browser Docks and enter a new value, name it whatever you like, set the url to http://localhost:8080/countdown.html#controls
 
 ## Todo
-- Chat Channel Funnel
+- OBS Studio (streaming tool)
+  - Browser Sources (Overlays)
+    - [ ] Events
+      - [ ] Subscription & Follow notices
+      - [ ] Chat
+    - [ ] Avatar Animation & Face Tracking
+    - [ ]
+  - Browser Docks (Controls)
+    - [ ] Chat Channel Funnel
+      - [ ] Twitch
+      - [ ] Youtube
+      - [ ] Rumble
+      - [ ] Discord
+    - [ ] Clip Video Markers
+- Streaming Services
   - Twitch
-  - Youtube
-  - Rumble
-  - Discord
-- Avatar Animation & Face Tracking
-- Stream Overlays
-  - Events
-    - Subscription & Follow notices
-- Stream Clip Video Markers
+    - [ ] Research if any of these tools can also be made into Twitch Extensions
+- App / Web App
+  - [ ] Handle Stream Setup via API's
+    - [ ] Browser Dock UI to set:
+      - [ ] Title
+      - [ ] Description
+      - [ ] Thumbnail/Placeholder
+      - [ ] Schedule Stream Start
+    - [ ] Route used as Browser Source to show in OBS
 
 ## References
  - Part 1 - https://www.youtube.com/watch?v=elhbp_BVCvM
