@@ -31,6 +31,7 @@
       padding: 0;
       margin: 0;
       color: white;
+      transition: all ease-out 1.5s;
     }
     #controls {
       background-color: #222;
@@ -57,7 +58,11 @@
       font-size: 2em;
       padding: .5rem 1rem;
       margin: .1rem;
-      border: 0 solid transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    #controls button:hover {
+      border-color: mintcream;
     }
     #controls button[name=start_pause] {
       background: limegreen;
@@ -70,6 +75,10 @@
     }
     #controls button[name=sub_30],
     #controls button[name=add_30] {
+      background: deepskyblue;
+    }
+    #controls button[name=sub_15],
+    #controls button[name=add_15] {
       background: cyan;
     }
     #controls:target {
@@ -88,8 +97,10 @@
       <button name="reset">Reset</button>
     </div>
     <div>
+      <button name="sub_15">-15</button>
       <button name="sub_30">-30</button>
       <button name="add_30">+30</button>
+      <button name="add_15">+15</button>
     </div>
   </div>
 
@@ -112,6 +123,8 @@
     let resetButtonElement = document.querySelector('#controls button[name=reset]')
     let sub30ButtonElement = document.querySelector('#controls button[name=sub_30]')
     let add30ButtonElement = document.querySelector('#controls button[name=add_30]')
+    let sub15ButtonElement = document.querySelector('#controls button[name=sub_15]')
+    let add15ButtonElement = document.querySelector('#controls button[name=add_15]')
     let countdownInterval
 
     function updateCountdown() {
@@ -203,21 +216,31 @@
 
     sub30ButtonElement.addEventListener('click', () => {
       storeCountdown -= second * 30
-      bc.postMessage(['sub'])
+      bc.postMessage(['sub', 30])
     })
 
     add30ButtonElement.addEventListener('click', () => {
       storeCountdown += second * 30
-      bc.postMessage(['add'])
+      bc.postMessage(['add', 30])
+    })
+
+    sub15ButtonElement.addEventListener('click', () => {
+      storeCountdown -= second * 15
+      bc.postMessage(['sub', 15])
+    })
+
+    add15ButtonElement.addEventListener('click', () => {
+      storeCountdown += second * 15
+      bc.postMessage(['add', 15])
     })
 
 
     bc.onmessage = (event) => {
       if (event.data[0] === 'sub') {
-        storeCountdown -= second * 30
+        storeCountdown -= second * event.data[1]
       }
       if (event.data[0] === 'add') {
-        storeCountdown += second * 30
+        storeCountdown += second * event.data[1]
       }
       if (event.data[0] === 'reset') {
         resetButton()
