@@ -60,26 +60,41 @@
       margin: .1rem;
       border: 1px solid transparent;
       cursor: pointer;
-    }
-    #controls button:hover {
-      border-color: mintcream;
+      transition: background ease-in-out .1s;
     }
     #controls button[name=start_pause] {
       background: limegreen;
     }
+    #controls button[name=start_pause]:hover {
+      background: lime;
+    }
     #controls button[name=reset] {
+      background: orangered;
+    }
+    #controls button[name=reset]:hover {
       background: red;
     }
     #controls button.pause[name=start_pause] {
+      background: darkorange;
+    }
+    #controls button.pause[name=start_pause]:hover {
       background: orange;
     }
     #controls button[name=sub_30],
     #controls button[name=add_30] {
+      background: dodgerblue;
+    }
+    #controls button[name=sub_30]:hover,
+    #controls button[name=add_30]:hover {
       background: deepskyblue;
     }
     #controls button[name=sub_15],
     #controls button[name=add_15] {
-      background: cyan;
+      background: turquoise;
+    }
+    #controls button[name=sub_15]:hover,
+    #controls button[name=add_15]:hover {
+      background: aqua;
     }
     #controls:target {
       display: flex;
