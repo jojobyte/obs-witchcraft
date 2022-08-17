@@ -19,6 +19,8 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
 
 ## Todo
 - [ ] Add css transition to Countdown Timer Font Size
+- [ ] Reset Font size when reset button is pressed
+- [ ] Reset Play/Pause button when time is reached
 - OBS Studio (streaming tool)
   - Browser Sources (Overlays)
     - [ ] Events
