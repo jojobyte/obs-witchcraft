@@ -18,8 +18,9 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
    2. Open the Docks Menu -> Custom Browser Docks and enter a new value, name it whatever you like, set the url to http://localhost:8080/countdown.html#controls
 
 ## Todo
-- [ ] Reset Font size when reset button is pressed
-- [ ] Reset Play/Pause button when time is reached
+- [ ] Test if BroadcastChannel works without server between html files
+- [x] Reset Play/Pause button when time is reached
+- [x] Reset Font size when reset button is pressed
 - [x] Add button hover styles
 - [x] Add css transition to Countdown Timer Font Size
 - [x] Add & Sub 15 second buttons
