@@ -9,6 +9,7 @@
       display: flex;
       width: 100%;
       min-height: 100%;
+      overflow-x: hidden;
     }
     body {
       background-color: #111;
@@ -26,12 +27,12 @@
       font-size: 18vw;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: left;
       line-height: 1;
-      padding: 0;
+      padding: 0 0 0 2rem;
       margin: 0;
       color: white;
-      transition: all ease-out 1.5s;
+      transition: all ease-out .3s;
     }
     #controls {
       background-color: #222;
@@ -121,7 +122,7 @@
 
   <script type="module">
     const initalFontSize = 18
-    const maxFontSize = 38
+    const maxFontSize = 36
     const second = 1000
 
     if (!localStorage.getItem('countdown')) {
@@ -130,7 +131,7 @@
 
     let bc = new BroadcastChannel('countdown')
     let storeCountdown = localStorage.getItem('countdown')
-    let storeRunning = false
+    let countdownRunning = false
     let countdownElement = document.getElementsByTagName('h1')
     let inputElement = document.querySelector('#controls input')
     let inputValueElement = document.querySelector('#controls span')
@@ -143,7 +144,7 @@
     let countdownInterval
 
     function updateCountdown() {
-      if (!storeRunning) {
+      if (!countdownRunning) {
         return clearInterval(countdownInterval)
       }
 
@@ -160,7 +161,9 @@
       }
 
       if (storeCountdown === 0) {
+        countdownRunning = false
         clearInterval(countdownInterval)
+        updateButton()
       }
     }
 
@@ -178,7 +181,7 @@
     }
 
     function updateButton () {
-      if (storeRunning) {
+      if (countdownRunning) {
         toggleButtonElement.classList.add('pause')
         return toggleButtonElement.textContent = 'Pause'
       }
@@ -188,20 +191,21 @@
     }
 
     function toggleButton () {
-      if (storeRunning) {
-        storeRunning = false
+      if (countdownRunning) {
+        countdownRunning = false
         return clearInterval(countdownInterval)
       }
 
-      storeRunning = true
+      countdownRunning = true
       countdownInterval = setInterval(updateCountdown, second)
     }
 
     function resetButton () {
       clearInterval(countdownInterval)
       storeCountdown = localStorage.getItem('countdown')
-      storeRunning = false
+      countdownRunning = false
       countdownElement.item(0).textContent = getCountdownText(storeCountdown)
+      countdownElement.item(0).style.fontSize = `${initalFontSize}vw`
       updateButton()
     }
 
@@ -221,7 +225,7 @@
     toggleButtonElement.addEventListener('click', () => {
       toggleButton()
       updateButton()
-      bc.postMessage(['toggle', storeRunning])
+      bc.postMessage(['toggle', countdownRunning])
     })
 
     resetButtonElement.addEventListener('click', () => {
@@ -261,7 +265,7 @@
         resetButton()
       }
       if (event.data[0] === 'toggle') {
-        storeRunning = event.data[1]
+        countdownRunning = event.data[1]
 
         if (event.data[1]) {
           countdownInterval = setInterval(updateCountdown, second)
