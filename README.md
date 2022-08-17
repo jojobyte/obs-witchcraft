@@ -18,13 +18,7 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
    2. Open the Docks Menu -> Custom Browser Docks and enter a new value, name it whatever you like, set the url to http://localhost:8080/countdown.html#controls
 
 ## Todo
-- [ ] Test if BroadcastChannel works without server between html files
-- [x] Reset Play/Pause button when time is reached
-- [x] Reset Font size when reset button is pressed
-- [x] Add button hover styles
-- [x] Add css transition to Countdown Timer Font Size
-- [x] Add & Sub 15 second buttons
-- [x] Set minimum value on slider
+- [ ] Test if OBS WebSockets will work in place of BroadcastChannel
 - OBS Studio (streaming tool)
   - Browser Sources (Overlays)
     - [ ] Events
@@ -50,6 +44,23 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
       - [ ] Thumbnail/Placeholder
       - [ ] Schedule Stream Start
     - [ ] Route used as Browser Source to show in OBS
+- OBS Binding Ideas - https://github.com/obsproject/obs-browser#js-bindings
+  - [ ] addEventListener on obsStreamingStarted to start countdown timer automatically
+    - `window.addEventListener('obsStreamingStarted', console.log)`
+    - https://github.com/obsproject/obs-browser#register-for-event-callbacks
+  - [ ] At end of timer, automatically transition to another scene
+    - `window.obsstudio.getScenes(console.log)`
+    - `window.obsstudio.setCurrentScene('Intro')`
+    - https://github.com/obsproject/obs-browser#change-scene
+
+# Done
+- [x] Test if BroadcastChannel works without server between html files
+- [x] Reset Play/Pause button when time is reached
+- [x] Reset Font size when reset button is pressed
+- [x] Add button hover styles
+- [x] Add css transition to Countdown Timer Font Size
+- [x] Add & Sub 15 second buttons
+- [x] Set minimum value on slider
 
 ## References
  - Part 1 - https://www.youtube.com/watch?v=elhbp_BVCvM
