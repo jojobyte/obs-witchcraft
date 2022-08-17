@@ -156,7 +156,7 @@
 
       countdownElement.item(0).textContent = getCountdownText(storeCountdown)
 
-      if (storeCountdown <= 10 * second) {
+      if (storeCountdown < 10 * second) {
         countdownElement.item(0).style.fontSize = `calc(${((maxFontSize-initalFontSize)/(storeCountdown/second))+initalFontSize}vw)`
       }
 
