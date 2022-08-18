@@ -23,7 +23,6 @@
     }
     h1 {
       font-family: sans-serif;
-      font-size: 38vw;
       font-size: 18vw;
       display: flex;
       align-items: center;
@@ -63,10 +62,10 @@
       cursor: pointer;
       transition: background ease-in-out .1s;
     }
-    #controls button[name=start_pause] {
+    #controls button[name=toggle] {
       background: limegreen;
     }
-    #controls button[name=start_pause]:hover {
+    #controls button[name=toggle]:hover {
       background: lime;
     }
     #controls button[name=reset] {
@@ -75,10 +74,10 @@
     #controls button[name=reset]:hover {
       background: red;
     }
-    #controls button.pause[name=start_pause] {
+    #controls button.pause[name=toggle] {
       background: darkorange;
     }
-    #controls button.pause[name=start_pause]:hover {
+    #controls button.pause[name=toggle]:hover {
       background: orange;
     }
     #controls button[name=sub_30],
@@ -109,7 +108,7 @@
     <input type="range" step="15000" min="30000" max="1800000" /> <!-- 30 mins = 1800000 -->
     <span></span>
     <div>
-      <button name="start_pause">Start</button>
+      <button name="toggle">Start</button>
       <button name="reset">Reset</button>
     </div>
     <div>
@@ -129,19 +128,17 @@
       localStorage.setItem('countdown', 5 * 60 * second)
     }
 
+    let countdownInterval
+    let countdownRunning = false
+
     let bc = new BroadcastChannel('countdown')
     let storeCountdown = localStorage.getItem('countdown')
-    let countdownRunning = false
-    let countdownElement = document.getElementsByTagName('h1')
+
+    let countdownElement = document.querySelector('h1')
     let inputElement = document.querySelector('#controls input')
     let inputValueElement = document.querySelector('#controls span')
-    let toggleButtonElement = document.querySelector('#controls button[name=start_pause]')
-    let resetButtonElement = document.querySelector('#controls button[name=reset]')
-    let sub30ButtonElement = document.querySelector('#controls button[name=sub_30]')
-    let add30ButtonElement = document.querySelector('#controls button[name=add_30]')
-    let sub15ButtonElement = document.querySelector('#controls button[name=sub_15]')
-    let add15ButtonElement = document.querySelector('#controls button[name=add_15]')
-    let countdownInterval
+    let buttonElements = document.querySelectorAll('#controls div')
+    let toggleButtonElement = document.querySelector('#controls button[name=toggle]')
 
     function updateCountdown() {
       if (!countdownRunning) {
@@ -154,16 +151,18 @@
         storeCountdown = 0;
       }
 
-      countdownElement.item(0).textContent = getCountdownText(storeCountdown)
+      countdownElement.textContent = getCountdownText(storeCountdown)
 
       if (storeCountdown < 10 * second) {
-        countdownElement.item(0).style.fontSize = `calc(${((maxFontSize-initalFontSize)/(storeCountdown/second))+initalFontSize}vw)`
+        countdownElement.style.fontSize = `calc(${
+          ((maxFontSize-initalFontSize)/(storeCountdown/second))+initalFontSize
+        }vw)`
       }
 
       if (storeCountdown === 0) {
         countdownRunning = false
         clearInterval(countdownInterval)
-        updateButton()
+        updateButton(toggleButtonElement)
       }
     }
 
@@ -180,14 +179,14 @@
       inputValueElement.textContent = getCountdownText(time)
     }
 
-    function updateButton () {
+    function updateButton (target) {
       if (countdownRunning) {
-        toggleButtonElement.classList.add('pause')
-        return toggleButtonElement.textContent = 'Pause'
+        target.classList.add('pause')
+        return target.textContent = 'Pause'
       }
 
-      toggleButtonElement.classList.remove('pause')
-      toggleButtonElement.textContent = 'Start'
+      target.classList.remove('pause')
+      target.textContent = 'Start'
     }
 
     function toggleButton () {
@@ -204,9 +203,9 @@
       clearInterval(countdownInterval)
       storeCountdown = localStorage.getItem('countdown')
       countdownRunning = false
-      countdownElement.item(0).textContent = getCountdownText(storeCountdown)
-      countdownElement.item(0).style.fontSize = `${initalFontSize}vw`
-      updateButton()
+      countdownElement.textContent = getCountdownText(storeCountdown)
+      countdownElement.style.fontSize = `${initalFontSize}vw`
+      updateButton(toggleButtonElement)
     }
 
     updateInput(storeCountdown)
@@ -214,45 +213,40 @@
     inputElement.addEventListener('change', event => {
       localStorage.setItem('countdown', event.target.value)
       inputValueElement.textContent = getCountdownText(event.target.value)
-      countdownElement.item(0).textContent = getCountdownText(storeCountdown)
-      updateButton()
+      countdownElement.textContent = getCountdownText(storeCountdown)
+      updateButton(toggleButtonElement)
     })
 
     inputElement.addEventListener('input', event => {
       inputValueElement.textContent = getCountdownText(event.target.value)
     })
 
-    toggleButtonElement.addEventListener('click', () => {
-      toggleButton()
-      updateButton()
-      bc.postMessage(['toggle', countdownRunning])
-    })
+    buttonElements.forEach(div => {
+      div.addEventListener('click', event => {
+        if (event?.target?.name) {
+          let [ name, sec ] = event.target.name.split('_')
+          console.log(name, sec)
 
-    resetButtonElement.addEventListener('click', () => {
-      resetButton()
-      bc.postMessage(['reset'])
+          if (name === 'toggle') {
+            toggleButton()
+            updateButton(event.target)
+            bc.postMessage(['toggle', countdownRunning])
+          }
+          if (name === 'reset') {
+            resetButton()
+            bc.postMessage(['reset'])
+          }
+          if (name === 'sub') {
+            storeCountdown -= second * sec
+            bc.postMessage([name, sec])
+          }
+          if (name === 'add') {
+            storeCountdown += second * sec
+            bc.postMessage([name, sec])
+          }
+        }
+      })
     })
-
-    sub30ButtonElement.addEventListener('click', () => {
-      storeCountdown -= second * 30
-      bc.postMessage(['sub', 30])
-    })
-
-    add30ButtonElement.addEventListener('click', () => {
-      storeCountdown += second * 30
-      bc.postMessage(['add', 30])
-    })
-
-    sub15ButtonElement.addEventListener('click', () => {
-      storeCountdown -= second * 15
-      bc.postMessage(['sub', 15])
-    })
-
-    add15ButtonElement.addEventListener('click', () => {
-      storeCountdown += second * 15
-      bc.postMessage(['add', 15])
-    })
-
 
     bc.onmessage = (event) => {
       if (event.data[0] === 'sub') {
@@ -273,7 +267,7 @@
       }
     }
 
-    countdownElement.item(0).textContent = getCountdownText(storeCountdown)
+    countdownElement.textContent = getCountdownText(storeCountdown)
 
     countdownInterval = setInterval(updateCountdown, second)
   </script>
