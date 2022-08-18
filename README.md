@@ -63,6 +63,7 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
 - [x] Add css transition to Countdown Timer Font Size
 - [x] Add & Sub 15 second buttons
 - [x] Set minimum value on slider
+- [x] Cleanup the code
 
 ## References
  - Part 1 - https://www.youtube.com/watch?v=elhbp_BVCvM
