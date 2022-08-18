@@ -54,6 +54,7 @@
     #controls div {
       display: flex;
     }
+    #controls select,
     #controls button {
       font-size: 2em;
       padding: .5rem 1rem;
@@ -117,6 +118,10 @@
       <button name="add_30">+30</button>
       <button name="add_15">+15</button>
     </div>
+    <p>When time runs out switch to this scene</p>
+    <select id="scenesSelector">
+      <option>---</option>
+    </select>
   </div>
 
   <script type="module">
@@ -128,7 +133,7 @@
       localStorage.setItem('countdown', 5 * 60 * second)
     }
 
-    let countdownInterval
+    let countdownInterval, switchToScene
     let countdownRunning = false
 
     let bc = new BroadcastChannel('countdown')
@@ -139,6 +144,7 @@
     let inputValueElement = document.querySelector('#controls span')
     let buttonElements = document.querySelector('#controls')
     let toggleButtonElement = document.querySelector('#controls button[name=toggle]')
+    let scenesSelectorElement = document.querySelector('#scenesSelector')
 
     function updateCountdown() {
       if (!countdownRunning) {
@@ -163,6 +169,9 @@
         countdownRunning = false
         clearInterval(countdownInterval)
         updateButton(toggleButtonElement)
+        if (switchToScene) {
+          window.obsstudio.setCurrentScene(switchToScene)
+        }
       }
     }
 
@@ -246,7 +255,47 @@
       }
     })
 
+    scenesSelectorElement.addEventListener('change', event => {
+      console.log('scene selector change', event?.target?.value)
+      bc.postMessage(['countdownScene', event?.target?.value])
+    })
+
+    // console.log('window.obsstudio', window.obsstudio)
+
+    // window.obsstudio.getControlLevel(function (level) {
+    //   console.log(level)
+    // })
+
+    // window.addEventListener('obsSceneChanged', function(event) {
+    //   console.log('scene changed', event.detail.name)
+    // })
+
+    // window.obsstudio.getCurrentScene(function(scene) {
+    //   console.log(scene)
+    // })
+
+    window.obsstudio.getScenes(function (scenes) {
+      console.log(scenes)
+
+      bc.postMessage(['scenes', scenes])
+    })
+
     bc.onmessage = (event) => {
+      if (event.data[0] === 'countdownScene') {
+        console.log('scene from browser dock', event.data[1])
+        switchToScene = event.data[1]
+      }
+      if (event.data[0] === 'scenes') {
+        console.log('scenes from browser source', event.data[1])
+
+        let sceneStr = `<option value="">Don't Switch</option>`
+
+        for (let scene of event.data[1]) {
+          sceneStr += `<option>${scene}</option>`
+        }
+
+        scenesSelectorElement.innerHTML = sceneStr
+      }
       if (event.data[0] === 'sub') {
         storeCountdown -= second * event.data[1]
       }
