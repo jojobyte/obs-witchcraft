@@ -49,7 +49,7 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
   - [ ] addEventListener on obsStreamingStarted to start countdown timer automatically
     - `window.addEventListener('obsStreamingStarted', console.log)`
     - https://github.com/obsproject/obs-browser#register-for-event-callbacks
-  - [ ] At end of timer, automatically transition to another scene
+  - [x] At end of timer, automatically transition to another scene
     - `window.obsstudio.getScenes(console.log)`
     - `window.obsstudio.setCurrentScene('Intro')`
     - https://github.com/obsproject/obs-browser#change-scene
