@@ -137,7 +137,7 @@
     let countdownElement = document.querySelector('h1')
     let inputElement = document.querySelector('#controls input')
     let inputValueElement = document.querySelector('#controls span')
-    let buttonElements = document.querySelectorAll('#controls div')
+    let buttonElements = document.querySelector('#controls')
     let toggleButtonElement = document.querySelector('#controls button[name=toggle]')
 
     function updateCountdown() {
@@ -221,31 +221,29 @@
       inputValueElement.textContent = getCountdownText(event.target.value)
     })
 
-    buttonElements.forEach(div => {
-      div.addEventListener('click', event => {
-        if (event?.target?.name) {
-          let [ name, sec ] = event.target.name.split('_')
-          console.log(name, sec)
+    buttonElements.addEventListener('click', event => {
+      if (event?.target?.name) {
+        let [ name, sec ] = event.target.name.split('_')
+        console.log(name, sec)
 
-          if (name === 'toggle') {
-            toggleButton()
-            updateButton(event.target)
-            bc.postMessage(['toggle', countdownRunning])
-          }
-          if (name === 'reset') {
-            resetButton()
-            bc.postMessage(['reset'])
-          }
-          if (name === 'sub') {
-            storeCountdown -= second * sec
-            bc.postMessage([name, sec])
-          }
-          if (name === 'add') {
-            storeCountdown += second * sec
-            bc.postMessage([name, sec])
-          }
+        if (name === 'toggle') {
+          toggleButton()
+          updateButton(event.target)
+          bc.postMessage(['toggle', countdownRunning])
         }
-      })
+        if (name === 'reset') {
+          resetButton()
+          bc.postMessage(['reset'])
+        }
+        if (name === 'sub') {
+          storeCountdown -= second * sec
+          bc.postMessage([name, sec])
+        }
+        if (name === 'add') {
+          storeCountdown += second * sec
+          bc.postMessage([name, sec])
+        }
+      }
     })
 
     bc.onmessage = (event) => {
