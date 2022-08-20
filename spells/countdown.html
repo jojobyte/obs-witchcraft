@@ -54,6 +54,9 @@
     #controls div {
       display: flex;
     }
+    #controls label {
+      margin: 1.5em 0 0;
+    }
     #controls select,
     #controls button {
       font-size: 2em;
@@ -118,6 +121,10 @@
       <button name="add_30">+30</button>
       <button name="add_15">+15</button>
     </div>
+    <label>
+      <input name="autostart" type="checkbox" />
+      Auto-start countdown on streaming started
+    </label>
     <p>When time runs out switch to this scene</p>
     <select id="scenesSelector">
       <option>---</option>
@@ -132,12 +139,16 @@
     if (!localStorage.getItem('countdown')) {
       localStorage.setItem('countdown', 5 * 60 * second)
     }
+    if (!localStorage.getItem('autostart')) {
+      localStorage.setItem('autostart', false)
+    }
 
     let countdownInterval, switchToScene
     let countdownRunning = false
 
     let bc = new BroadcastChannel('countdown')
     let storeCountdown = localStorage.getItem('countdown')
+    let autoStartCountdown = localStorage.getItem('autostart')
 
     let countdownElement = document.querySelector('h1')
     let inputElement = document.querySelector('#controls input')
@@ -160,9 +171,9 @@
       countdownElement.textContent = getCountdownText(storeCountdown)
 
       if (storeCountdown < 10 * second) {
-        countdownElement.style.fontSize = `calc(${
+        countdownElement.style.fontSize = `${
           ((maxFontSize-initalFontSize)/(storeCountdown/second))+initalFontSize
-        }vw)`
+        }vw`
       }
 
       if (storeCountdown === 0) {
@@ -252,6 +263,12 @@
           storeCountdown += second * sec
           bc.postMessage([name, sec])
         }
+        if (name === 'autostart') {
+          console.log('autostart target', event?.target?.checked)
+          autoStartCountdown = event?.target?.checked
+          localStorage.setItem('autostart', autoStartCountdown)
+          bc.postMessage([name, autoStartCountdown])
+        }
       }
     })
 
@@ -274,6 +291,15 @@
     //   console.log(scene)
     // })
 
+    window.addEventListener('obsStreamingStarted', event => {
+      console.log('obsStreamingStarted', autoStartCountdown, event)
+      if (autoStartCountdown) {
+        toggleButton()
+        updateButton(toggleButtonElement)
+        bc.postMessage(['toggle', countdownRunning])
+      }
+    })
+
     window.obsstudio.getScenes(function (scenes) {
       console.log(scenes)
 
@@ -281,11 +307,16 @@
     })
 
     bc.onmessage = (event) => {
+      if (event.data[0] === 'autostart') {
+        console.log('autostart browser dock', event.data[1])
+        autoStartCountdown = event.data[1]
+        localStorage.setItem('autostart', event.data[1])
+      }
       if (event.data[0] === 'countdownScene') {
         console.log('scene from browser dock', event.data[1])
         switchToScene = event.data[1]
       }
-      if (event.data[0] === 'scenes') {
+      if (event.data[0] === 'scenes' && event.data[1]) {
         console.log('scenes from browser source', event.data[1])
 
         let sceneStr = `<option value="">Don't Switch</option>`
