@@ -46,7 +46,7 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
   - [ ] Serve countdown on LAN so it can be accessed on phone
   - [ ] *optional* Add sound when nearing times up
 - OBS Binding Ideas - https://github.com/obsproject/obs-browser#js-bindings
-  - [ ] addEventListener on obsStreamingStarted to start countdown timer automatically
+  - [x] addEventListener on obsStreamingStarted to start countdown timer automatically
     - `window.addEventListener('obsStreamingStarted', console.log)`
     - https://github.com/obsproject/obs-browser#register-for-event-callbacks
   - [x] At end of timer, automatically transition to another scene
