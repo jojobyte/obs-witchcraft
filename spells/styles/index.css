@@ -1,0 +1,111 @@
+html {
+  display: flex;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+body {
+  background-color: #111;
+  color: white;
+  display: flex;
+  width: 100%;
+  min-height: 100%;
+  flex-direction: column;
+  font-family: sans-serif;
+  font-size: 18px;
+  box-sizing: border-box;
+}
+
+a {
+  color: cyan;
+  font-size: 1.5em;
+  text-decoration: none;
+}
+a.btn {
+  display: flex;
+  background-color: #9146FF;
+  color: #fff;
+  text-transform: uppercase;
+  padding: 1rem;
+  min-width: 90%;
+  align-content: center;
+  justify-content: space-evenly;
+}
+.twitch i {
+  background: url(../assets/TwitchGlitchWhite.svg) no-repeat center center;
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+}
+a:hover {
+  text-decoration: underline;
+}
+a.btn:hover {
+  background-color: #7214ff;
+  text-decoration: none;
+}
+
+h1 {
+  font-size: 4em;
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  line-height: 1;
+  color: white;
+  margin: 1rem;
+}
+
+#controls {
+  background-color: #222;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 1rem;
+}
+#controls span {
+  font-size: 5em;
+}
+#controls input[type=range] {
+  display: block;
+  width: 100%;
+  height: 5vh;
+  font-size: 5em;
+}
+#controls div {
+  display: flex;
+}
+#controls label {
+  margin: 1.5em 0 0;
+}
+#controls select,
+#controls button {
+  font-size: 2em;
+  padding: .5rem 1rem;
+  margin: .1rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background ease-in-out .1s;
+}
+#controls button[name=toggle] {
+  background: limegreen;
+}
+#controls button[name=toggle]:hover {
+  background: lime;
+}
+#controls button[name=reset] {
+  background: orangered;
+}
+#controls button[name=reset]:hover {
+  background: red;
+}
+#controls button.pause[name=toggle] {
+  background: darkorange;
+}
+#controls button.pause[name=toggle]:hover {
+  background: orange;
+}
+/* #controls:target {
+  display: flex;
+} */

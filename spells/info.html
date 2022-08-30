@@ -1,139 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Channel Info</title>
-  <style></style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Channel Info</title>
+<style>
+@import url(./styles/index.css);
+
+textarea,
+input {
+  border: 0 solid transparent;
+  background-color: black;
+  color:ivory;
+  box-sizing: border-box;
+  font-size: 2rem;
+  max-width: 98vw;
+  width: 100%;
+  padding: .5rem 1rem;
+  margin: 1rem auto;
+}
+textarea {
+  resize: vertical;
+  min-height: 8rem;
+  max-height: 20rem;
+  height: 12rem;
+}
+
+#controls button {
+  padding: 1rem;
+  background: darkorange;
+}
+#controls button:hover {
+  background: orange;
+}
+</style>
 </head>
 <body>
-  <h1>Channel Info</h1>
-  <div id="output"></div>
-  <script type="module" async>
-    const parseJwt = token => token && JSON.parse(
-      decodeURIComponent(
-        window.atob(
-          token?.split('.')?.[1]?.replace(/-/g, '+').replace(/_/g, '/')
-        ).split('').map(
-          c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        ).join('')
-      )
+
+<h1>Channel Info</h1>
+<div id="controls"></div>
+
+<script type="module" async>
+const parseJwt = token => token && JSON.parse(
+  decodeURIComponent(
+    window.atob(
+      token?.split('.')?.[1]?.replace(/-/g, '+').replace(/_/g, '/')
+    ).split('').map(
+      c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join('')
+  )
+)
+
+const randStr = n => [...crypto.getRandomValues(new Uint8Array(n))]
+  .map((x,i) => (
+    i=x/255*61|0,
+    String.fromCharCode(i+(i>9?i>35?61:55:48))
+  )).join``
+
+if (!localStorage.getItem('TWITCH_REDIRECT_URI')) {
+  localStorage.setItem('REDIRECT_URI', 'http://localhost:8080/info.html')
+}
+
+let twitch = localStorage.getItem('TWITCH')
+twitch = twitch ? JSON.parse(window.atob(twitch)) : ''
+let twitchCfg = {
+  client_id: twitch?.clientId || '',
+  redirect_uri: localStorage.getItem('REDIRECT_URI'),
+  response_type: 'token id_token',
+  scope: [
+    'channel:manage:broadcast',
+    'user:read:email',
+    'openid'
+  ].join` `,
+  claims: JSON.stringify({
+    "id_token": {
+      "preferred_username": null,
+      "picture": null,
+    },
+  }),
+  state: randStr(40),
+  nonce: randStr(40)
+}
+let authUrl = 'https://id.twitch.tv/oauth2/authorize'
+let payload
+
+let controls = document.querySelector('#controls')
+
+function storeTwitch() {
+  if (location.hash.indexOf('access_token') > -1) {
+    let twitched = twitch
+    twitch = {
+      ...twitched,
+      ...(Object.fromEntries(
+        location.hash.substr(1).split('&')
+          .map(p => p.split('='))
+      ))
+    }
+    localStorage.setItem(
+      'TWITCH',
+      window.btoa(JSON.stringify(twitch))
     )
+    history.replaceState(null, '', 'info.html')
+  }
+}
 
-    const randStr = n => [...crypto.getRandomValues(new Uint8Array(n))]
-      .map((x,i) => (
-        i=x/255*61|0,
-        String.fromCharCode(i+(i>9?i>35?61:55:48))
-      )).join``
+if (!twitch?.access_token) {
+  storeTwitch()
+}
 
-    if (!localStorage.getItem('TWITCH_REDIRECT_URI')) {
-      localStorage.setItem('REDIRECT_URI', 'http://localhost:8080/info.html')
-    }
-
-    let twitch = localStorage.getItem('TWITCH')
-    twitch = twitch ? JSON.parse(window.atob(twitch)) : ''
-    let twitchCfg = {
-      client_id: twitch?.clientId || '',
-      redirect_uri: localStorage.getItem('REDIRECT_URI'),
-      response_type: 'token id_token',
-      scope: [
-        'channel:manage:broadcast',
-        'user:read:email',
-        'openid'
-      ].join` `,
-      claims: JSON.stringify({
-        "id_token": {
-          "preferred_username": null,
-          "picture": null,
-        },
-      }),
-      state: randStr(40),
-      nonce: randStr(40)
-    }
-    let authUrl = 'https://id.twitch.tv/oauth2/authorize'
-    let payload
-
-    let output = document.querySelector('#output')
-
-    function storeTwitch() {
-      if (location.hash.indexOf('access_token') > -1) {
-        let twitched = twitch
-        twitch = {
-          ...twitched,
-          ...(Object.fromEntries(
-            location.hash.substr(1).split('&')
-              .map(p => p.split('='))
-          ))
-        }
-        localStorage.setItem(
-          'TWITCH',
-          window.btoa(JSON.stringify(twitch))
-        )
-        history.replaceState(null, '', 'info.html')
+if (!twitch?.access_token) {
+  if (twitchCfg.client_id !== '') {
+    let authReqUrl = `${authUrl}?${new URLSearchParams(twitchCfg)}`
+    controls.innerHTML = `<a class="btn twitch" href="${authReqUrl}"><i></i> Connect with Twitch</a>`
+  } else {
+    controls.innerHTML = `<input name="client_id" /><button>Save Client ID</button>`
+  }
+} else {
+  payload = parseJwt(twitch?.id_token)
+  let twitchChannelInfo = await fetch(
+    `https://api.twitch.tv/helix/channels?broadcaster_id=${payload?.sub}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${twitch.access_token}`,
+        'Client-Id': twitchCfg.client_id,
       }
     }
+  )
+  .then((response) => response.json())
+  controls.innerHTML = `
+    <textarea name="stream_title">${twitchChannelInfo.data?.[0].title}</textarea>
+    <button>Change Title</button>
+  `
+}
 
-    if (!twitch?.access_token) {
-      storeTwitch()
+controls.addEventListener('click', async event => {
+  if (event?.target?.tagName === 'BUTTON') {
+    if (event.target.previousElementSibling?.name === 'client_id') {
+      localStorage.setItem(
+        'TWITCH',
+        window.btoa(JSON.stringify({
+          ...twitch,
+          clientId: event.target.previousElementSibling.value
+        }))
+      )
+      window.location.reload()
     }
-
-    if (!twitch?.access_token) {
-      if (twitchCfg.client_id !== '') {
-        let authReqUrl = `${authUrl}?${new URLSearchParams(twitchCfg)}`
-        output.innerHTML = `<a href="${authReqUrl}">Connect with Twitch</a>`
-      } else {
-        output.innerHTML = `<input name="client_id" /><button>Save Client ID</button>`
-      }
-    } else {
-      payload = parseJwt(twitch?.id_token)
-      let twitchChannelInfo = await fetch(
-        `https://api.twitch.tv/helix/channels?broadcaster_id=${payload?.sub}`,
+    if (event.target.previousElementSibling?.name === 'stream_title') {
+      let twitchModifyChannelInfo = await fetch(
+        `https://api.twitch.tv/helix/channels?broadcaster_id=${payload.sub}`,
         {
+          method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${twitch.access_token}`,
             'Client-Id': twitchCfg.client_id,
-          }
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: event.target.previousElementSibling.value || ''
+          })
         }
       )
-      .then((response) => response.json())
-      output.innerHTML = `
-        <input name="stream_title" value="${twitchChannelInfo.data?.[0].title}" />
-        <button>Change Title</button>
-      `
     }
+  }
+})
 
-    output.addEventListener('click', async event => {
-      if (event?.target?.tagName === 'BUTTON') {
-        if (event.target.previousElementSibling?.name === 'client_id') {
-          localStorage.setItem(
-            'TWITCH',
-            window.btoa(JSON.stringify({
-              ...twitch,
-              clientId: event.target.previousElementSibling.value
-            }))
-          )
-          window.location.reload()
-        }
-        if (event.target.previousElementSibling?.name === 'stream_title') {
-          let twitchModifyChannelInfo = await fetch(
-            `https://api.twitch.tv/helix/channels?broadcaster_id=${payload.sub}`,
-            {
-              method: 'PATCH',
-              headers: {
-                'Authorization': `Bearer ${twitch.access_token}`,
-                'Client-Id': twitchCfg.client_id,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                title: event.target.previousElementSibling.value || ''
-              })
-            }
-          )
-        }
-      }
-    })
-
-    window.addEventListener('hashchange', storeTwitch);
-  </script>
+window.addEventListener('hashchange', storeTwitch);
+</script>
 </body>
 </html>
