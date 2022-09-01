@@ -42,29 +42,59 @@ button:hover {
 <div id="controls"></div>
 
 <script type="module" async>
-const parseJwt = token => token && JSON.parse(
-  decodeURIComponent(
-    window.atob(
-      token?.split('.')?.[1]?.replace(/-/g, '+').replace(/_/g, '/')
-    ).split('').map(
-      c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    ).join('')
-  )
-)
+const endpoint = {
+  youtube: {
+    base: 'https://youtube.googleapis.com/youtube/v3',
+    auth: 'https://accounts.google.com/o/oauth2/v2/auth',
+  },
+  twitch: {
+    base: 'https://api.twitch.tv/helix',
+    auth: 'https://id.twitch.tv/oauth2/authorize',
+  }
+}
 
-const randStr = n => [...crypto.getRandomValues(new Uint8Array(n))]
+const scope = {
+  youtube: {
+    yt: 'https://www.googleapis.com/auth/youtube',
+    ytfs: 'https://www.googleapis.com/auth/youtube.force-ssl',
+    ytpca: 'https://www.googleapis.com/auth/youtubepartner-channel-audit',
+  },
+  twitch: {
+    cmb: 'channel:manage:broadcast',
+    ure: 'user:read:email',
+    oid: 'openid',
+  }
+}
+
+function parseJwt (token) {
+  return token && JSON.parse(
+    decodeURIComponent(
+      window.atob(
+        token?.split('.')?.[1]?.replace(/-/g, '+').replace(/_/g, '/')
+      ).split('').map(
+        c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join('')
+    )
+  )
+}
+
+function randStr (n) {
+  return [...crypto.getRandomValues(new Uint8Array(n))]
   .map((x,i) => (
     i=x/255*61|0,
     String.fromCharCode(i+(i>9?i>35?61:55:48))
   )).join``
+}
 
-const hashToObject = () => Object.fromEntries(
-  location.hash.substr(1).split('&').map(p => p.split('='))
-)
+function hashToObject () {
+  return Object.fromEntries(
+    location.hash.substr(1).split('&').map(p => p.split('='))
+  )
+}
 
-const storeCredentials = (
+function storeCredentials (
   service, // youtube | twitch
-) => {
+) {
   // console.log('storeCredentials', location.hash, location.search)
   if (
     location.hash.indexOf('access_token') > -1 &&
@@ -82,7 +112,7 @@ const storeCredentials = (
   }
 }
 
-const storeLogout = service => {
+function storeLogout (service) {
   store[service].access_token = ''
   localStorage.setItem(
     service,
@@ -91,15 +121,9 @@ const storeLogout = service => {
   window.location.reload()
 }
 
-const storeYoutube = () => storeCredentials('youtube')
-const storeTwitch = () => storeCredentials('twitch')
-
-const logoutYouTube = () => storeLogout('youtube')
-const logoutTwitch = () => storeLogout('twitch')
-
-const handleHashChange = () => {
-  storeYoutube()
-  storeTwitch()
+function handleHashChange () {
+  storeCredentials('youtube')
+  storeCredentials('twitch')
 }
 
 if (!localStorage.getItem('REDIRECT_URI')) {
@@ -114,75 +138,65 @@ store['youtube'] = store['youtube'] ? JSON.parse(window.atob(store['youtube'])) 
 store['twitch'] = localStorage.getItem('twitch')
 store['twitch'] = store['twitch'] ? JSON.parse(window.atob(store['twitch'])) : ''
 
-let endpoint = {
+let cfg = {
   youtube: {
-    base: 'https://youtube.googleapis.com/youtube/v3',
-    auth: 'https://accounts.google.com/o/oauth2/v2/auth',
-  },
-  twitch: {
-    base: 'https://api.twitch.tv/helix',
-    auth: 'https://id.twitch.tv/oauth2/authorize',
-  }
-}
-
-let scope = {
-  youtube: {
-    yt: 'https://www.googleapis.com/auth/youtube',
-    ytfs: 'https://www.googleapis.com/auth/youtube.force-ssl',
-    ytpca: 'https://www.googleapis.com/auth/youtubepartner-channel-audit',
-  },
-  twitch: {
-    cmb: 'channel:manage:broadcast',
-    ure: 'user:read:email',
-    oid: 'openid',
-  }
-}
-
-let youtubeCfg = {
-  client_id: store['youtube']?.clientId || '',
-  redirect_uri: localStorage.getItem('REDIRECT_URI'),
-  response_type: 'token',
-  scope: Object.values(scope.youtube).join` `,
-  include_granted_scopes: 'true',
-  state: randStr(40),
-}
-
-let twitchCfg = {
-  client_id: store['twitch']?.clientId || '',
-  redirect_uri: localStorage.getItem('REDIRECT_URI'),
-  response_type: 'token id_token',
-  // scope: scope.twitch.cmb,
-  scope: Object.values(scope.twitch).join` `,
-  claims: JSON.stringify({
-    "id_token": {
-      "preferred_username": null,
-      "picture": null,
+    auth: {
+      client_id: store['youtube']?.clientId || '',
+      redirect_uri: localStorage.getItem('REDIRECT_URI'),
+      response_type: 'token',
+      scope: Object.values(scope.youtube).join` `,
+      include_granted_scopes: 'true',
+      state: randStr(40),
     },
-  }),
-  state: randStr(40),
-  nonce: randStr(40),
+    headers: {
+      'Authorization': `Bearer ${store['youtube'].access_token}`,
+      'Accept': 'application/json',
+    }
+  },
+  twitch: {
+    auth: {
+      client_id: store['twitch']?.clientId || '',
+      redirect_uri: localStorage.getItem('REDIRECT_URI'),
+      response_type: 'token id_token',
+      // scope: scope.twitch.cmb,
+      scope: Object.values(scope.twitch).join` `,
+      claims: JSON.stringify({
+        "id_token": {
+          "preferred_username": null,
+          "picture": null,
+        },
+      }),
+      state: randStr(40),
+      nonce: randStr(40),
+    },
+    headers: {
+      'Authorization': `Bearer ${store['twitch'].access_token}`,
+      'Client-Id': store['twitch']?.clientId,
+      'Content-Type': 'application/json',
+    }
+  }
 }
 
-let payload
 let ytLiveBroadcasts
 let ytLiveStreams
 let ytActiveBroadcastData
 let ytInsertLiveBroadcast
+let twitchBroadcasterID
 let twitchChannelInfo
 
 let auth = document.querySelector('#auth')
 let controls = document.querySelector('#controls')
 
 if (!store['youtube']?.access_token) {
-  storeYoutube()
+  storeCredentials('youtube')
 }
 
 if (!store['youtube']?.access_token) {
-  if (youtubeCfg.client_id !== '') {
+  if (cfg.youtube.auth.client_id !== '') {
     let ytAuthEndpoint = `${
       endpoint.youtube.auth
     }?${
-      new URLSearchParams(youtubeCfg)
+      new URLSearchParams(cfg.youtube.auth)
     }`
     auth.insertAdjacentHTML(
       'beforeend',
@@ -202,11 +216,7 @@ if (!store['youtube']?.access_token) {
   }
 } else {
   ytLiveBroadcasts = await fetch(
-    // `${endpoint.youtube.base}/videos?part=snippet%2CcontentDetails%2Cstatistics&mine=true&key=${store['youtube'].apiKey}`,
-    // `${endpoint.youtube.base}/channels?part=snippet%2CcontentDetails%2Cstatistics&mine=true`,
-    `${endpoint.youtube.base}/liveBroadcasts?part=snippet%2CcontentDetails%2Cstatus&broadcastType=all&mine=true`,
-    // &broadcastStatus=active
-    // &broadcastStatus=upcoming
+    `${endpoint.youtube.base}/liveBroadcasts?part=snippet%2CcontentDetails%2Cstatus&broadcastType=all&mine=true`, // &broadcastStatus=active || upcoming
     {
       headers: {
         'Authorization': `Bearer ${store['youtube'].access_token}`,
@@ -214,7 +224,7 @@ if (!store['youtube']?.access_token) {
       },
     }
   )
-  .then(res => res.status === 401 ? logoutYouTube() : res)
+  .then(res => res.status === 401 ? storeLogout('youtube') : res)
   .then(res => res.json())
 
   ytActiveBroadcastData = ytLiveBroadcasts?.items
@@ -232,8 +242,6 @@ if (!store['youtube']?.access_token) {
   // console.log('TOP ytInsertLiveBroadcast', ytInsertLiveBroadcast)
 
   ytLiveStreams = await fetch(
-    // `${endpoint.youtube.base}/videos?part=snippet%2CcontentDetails%2Cstatistics&mine=true&key=${store['youtube'].apiKey}`,
-    // `${endpoint.youtube.base}/channels?part=snippet%2CcontentDetails%2Cstatistics&mine=true`,
     `${endpoint.youtube.base}/liveStreams?part=snippet%2Ccdn%2CcontentDetails%2Cstatus&mine=true`,
     {
       headers: {
@@ -242,7 +250,7 @@ if (!store['youtube']?.access_token) {
       },
     }
   )
-  .then(res => res.status === 401 ? logoutYouTube() : res)
+  .then(res => res.status === 401 ? storeLogout('youtube') : res)
   .then(res => res.json())
 
   console.log('ytLiveStreams', ytLiveStreams)
@@ -275,12 +283,12 @@ if (!store['youtube']?.access_token) {
 }
 
 if (!store['twitch']?.access_token) {
-  storeTwitch()
+  storeCredentials('twitch')
 }
 
 if (!store['twitch']?.access_token) {
-  if (twitchCfg.client_id !== '') {
-    let twAuthEndpoint = `${endpoint.twitch.auth}?${new URLSearchParams(twitchCfg)}`
+  if (cfg.twitch.auth.client_id !== '') {
+    let twAuthEndpoint = `${endpoint.twitch.auth}?${new URLSearchParams(cfg.twitch.auth)}`
     auth.insertAdjacentHTML(
       'beforeend',
       `<a class="btn twitch" href="${twAuthEndpoint}"><i></i> Connect with Twitch</a>`
@@ -292,13 +300,12 @@ if (!store['twitch']?.access_token) {
     )
   }
 } else {
-  payload = parseJwt(store['twitch']?.id_token)
+  twitchBroadcasterID = parseJwt(store['twitch']?.id_token)?.sub
   twitchChannelInfo = await fetch(
-    `${endpoint.twitch.base}/channels?broadcaster_id=${payload?.sub}`,
+    `${endpoint.twitch.base}/channels?broadcaster_id=${twitchBroadcasterID}`,
     {
       headers: {
-        'Authorization': `Bearer ${store['twitch'].access_token}`,
-        'Client-Id': twitchCfg.client_id,
+        ...cfg.twitch.headers
       }
     }
   )
@@ -330,166 +337,232 @@ if (!store['twitch']?.access_token) {
   }
 }
 
+function handleClientId (previousElementSibling) {
+  let [ prop, srv ] = previousElementSibling.name.split('-')
+  let data = {
+    clientId: previousElementSibling.value
+  }
+  if (srv === 'yt') {
+    data['apiKey'] = previousElementSibling.previousElementSibling.value
+  }
+  let service = srv === 'tw' ? 'twitch' : 'youtube'
+  let serviceData = srv === 'tw' ? twitch : youtube
+  localStorage.setItem(
+    service,
+    window.btoa(JSON.stringify({
+      ...serviceData,
+      ...data
+    }))
+  )
+  window.location.reload()
+}
+
+async function api (service, path, params, init) {
+  return await fetch(
+    `${endpoint[service].base}/${path}?${
+      new URLSearchParams(params)
+    }`,
+    {
+      headers: {
+        ...cfg[service].headers,
+      },
+      ...init
+    }
+  )
+  .then(res => res.status === 401 ? storeLogout(service) : res)
+  .then(res => res.bodyUsed ? res.json() : res)
+}
+
+async function handleStreamTitle (previousElementSibling) {
+  let [ prop, srv ] = previousElementSibling.name.split('-')
+  if (srv === 'yt') {
+    let broadcastParams = {
+      part: ['snippet','contentDetails','status'],
+    }
+    if (!ytInsertLiveBroadcast) {
+      ytInsertLiveBroadcast = ytActiveBroadcastData?.find(
+        ({ status: { lifeCycleStatus, recordingStatus }}) =>
+          lifeCycleStatus === 'live' && // created || live || complete
+          recordingStatus === 'recording'
+      )
+      if (ytInsertLiveBroadcast) {
+        let ytUpdateLiveBroadcast = await api(
+          'youtube',
+          'liveBroadcasts',
+          broadcastParams,
+          {
+            method: 'PUT',
+            body: JSON.stringify({
+              id: ytInsertLiveBroadcast.id,
+              contentDetails: {
+                // enableClosedCaptions: true,
+                enableContentEncryption: true,
+                enableDvr: true,
+                enableEmbed: true,
+                recordFromStart: true,
+                startWithSlate: true,
+                monitorStream: {
+                  enableMonitorStream: true,
+                  broadcastStreamDelayMs: 5
+                }
+              },
+              snippet: {
+                title: previousElementSibling.value || '',
+                scheduledStartTime: (new Date()).toISOString(),
+              },
+              status: {
+                privacyStatus: 'public',
+              }
+            })
+          }
+        )
+        window.location.reload()
+        return
+      }
+    }
+    if (!ytInsertLiveBroadcast) {
+      // ytInsertLiveBroadcast = await fetch(
+      //   `${endpoint.youtube.base}/liveBroadcasts?${
+      //     new URLSearchParams(broadcastParams)
+      //   }`,
+      //   {
+      //     method: 'POST',
+      //     headers: {
+      //       'Authorization': `Bearer ${store['youtube'].access_token}`,
+      //       'Accept': 'application/json',
+      //       'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify({
+      //       snippet: {
+      //         title: previousElementSibling.value || '',
+      //         scheduledStartTime: (new Date()).toISOString(),
+      //       },
+      //       status: {
+      //         privacyStatus: 'public',
+      //       }
+      //     })
+      //   }
+      // )
+      // .then(res => res.status === 401 ? storeLogout('youtube') : res)
+      // .then(res => res.json())
+      ytInsertLiveBroadcast = await api(
+        'youtube',
+        'liveBroadcasts',
+        broadcastParams,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            snippet: {
+              title: previousElementSibling.value || '',
+              scheduledStartTime: (new Date()).toISOString(),
+            },
+            status: {
+              privacyStatus: 'public',
+            }
+          })
+        }
+      )
+    }
+
+    console.log('ytInsertLiveBroadcast', ytInsertLiveBroadcast)
+
+    if (ytInsertLiveBroadcast.status.recordingStatus === 'notRecording') {
+      let bindParams = {
+        id: ytInsertLiveBroadcast.id,
+        streamId: ytLiveStreams?.items?.[0]?.id,
+        part: ['snippet'],
+      }
+      // let ytBindLiveBroadcast = await fetch(
+      //   `${endpoint.youtube.base}/liveBroadcasts/bind?${
+      //     new URLSearchParams(bindParams)
+      //   }`,
+      //   {
+      //     method: 'POST',
+      //     headers: {
+      //       'Authorization': `Bearer ${store['youtube'].access_token}`,
+      //       'Accept': 'application/json',
+      //     },
+      //   }
+      // )
+      let ytBindLiveBroadcast = await api(
+        'youtube',
+        'liveBroadcasts/bind',
+        bindParams,
+        {
+          method: 'POST',
+        }
+      )
+
+      console.log('ytBindLiveBroadcast', ytBindLiveBroadcast)
+
+      let transitionParams = {
+        id: ytInsertLiveBroadcast.id,
+        part: ['snippet','status'],
+        broadcastStatus: 'testing',
+      }
+      transitionParams.broadcastStatus = 'live'
+      // transitionParams.broadcastStatus = 'complete'
+
+      // let ytTransitionLiveBroadcast = await fetch(
+      //   `${endpoint.youtube.base}/liveBroadcasts/transition?${
+      //     new URLSearchParams(transitionParams)
+      //   }`,
+      //   {
+      //     method: 'POST',
+      //     headers: {
+      //       'Authorization': `Bearer ${store['youtube'].access_token}`,
+      //       'Accept': 'application/json',
+      //     },
+      //   }
+      // )
+      let ytTransitionLiveBroadcast = await api(
+        'youtube',
+        'liveBroadcasts/transition',
+        transitionParams,
+        {
+          method: 'POST',
+        }
+      )
+
+      console.log('ytTransitionLiveBroadcast', ytTransitionLiveBroadcast)
+    }
+  }
+  if (srv === 'tw') {
+    // await twitchChannelPatch()
+    await api('twitch', 'channels', {
+      broadcaster_id: twitchBroadcasterID
+    }, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        title: previousElementSibling.value || ''
+      })
+    })
+    // await fetch(
+    //   `${endpoint.twitch.base}/channels?broadcaster_id=${twitchBroadcasterID}`,
+    //   {
+    //     method: 'PATCH',
+    //     headers: {
+    //       ...cfg.twitch.headers,
+    //     },
+    //     body: JSON.stringify({
+    //       title: previousElementSibling.value || ''
+    //     })
+    //   }
+    // )
+  }
+}
+
 controls.addEventListener('click', async event => {
   if (event?.target) {
-    const { name, tagName, previousElementSibling } = event.target
-    // console.log('btn click', name, tagName, previousElementSibling)
+    const { tagName, previousElementSibling } = event.target
     if (tagName === 'BUTTON') {
       if (previousElementSibling) {
         let [ prop, srv ] = previousElementSibling.name.split('-')
-        // console.log('btn click', prop, srv)
         if (prop === 'client_id') {
-          let data = {
-            clientId: previousElementSibling.value
-          }
-          if (srv === 'yt') {
-            data['apiKey'] = previousElementSibling.previousElementSibling.value
-          }
-          let service = srv === 'tw' ? 'TWITCH' : 'YOUTUBE'
-          let serviceData = srv === 'tw' ? twitch : youtube
-          localStorage.setItem(
-            service,
-            window.btoa(JSON.stringify({
-              ...serviceData,
-              ...data
-            }))
-          )
-          window.location.reload()
+          handleClientId(previousElementSibling)
         }
-        // if (prop === 'go_live') {
-        //   if (srv === 'yt') {
-        //     let ytInsertLiveBroadcast = await fetch(
-        //       `${endpoint.youtube.base}/liveBroadcasts?part=snippet%2CcontentDetails%2Cstatus`,
-        //       {
-        //         method: 'POST',
-        //         headers: {
-        //           'Authorization': `Bearer ${store['youtube'].access_token}`,
-        //           'Accept': 'application/json',
-        //           'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({
-        //           snippet: {
-        //             title: previousElementSibling.value || ''
-        //           },
-        //           status: {
-        //             privacyStatus: "public"
-        //           }
-        //         })
-        //       }
-        //     )
-        //     return
-        //     // let meh = {
-        //     //   "snippet":{
-        //     //     "title":"Test broadcast",
-        //     //     "scheduledStartTime":"YOUR_SCHEDULED_START_TIME",
-        //     //     "scheduledEndTime":"YOUR_SCHEDULED_END_TIME"
-        //     //   },
-        //     //   "contentDetails":{
-        //     //     "enableClosedCaptions":true,
-        //     //     "enableContentEncryption":true,
-        //     //     "enableDvr":true,
-        //     //     "enableEmbed":true,
-        //     //     "recordFromStart":true,
-        //     //     "startWithSlate":true
-        //     //   },
-        //     //   "status":{
-        //     //     "privacyStatus":"unlisted"
-        //     //   }
-        //     // }
-        //   }
-        //   if (srv === 'tw') {
-        //   }
-        // }
         if (prop === 'stream_title') {
-          if (srv === 'yt') {
-            if (!ytInsertLiveBroadcast) {
-              ytInsertLiveBroadcast = ytActiveBroadcastData?.find(
-                ({ status: { lifeCycleStatus, recordingStatus }}) =>
-                  lifeCycleStatus === 'live' && // created || live || complete
-                  recordingStatus === 'recording'
-              )
-            }
-            if (!ytInsertLiveBroadcast) {
-              ytInsertLiveBroadcast = await fetch(
-                `${endpoint.youtube.base}/liveBroadcasts?part=snippet%2CcontentDetails%2Cstatus`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${store['youtube'].access_token}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    snippet: {
-                      title: previousElementSibling.value || '',
-                      scheduledStartTime: (new Date()).toISOString(),
-                    },
-                    status: {
-                      privacyStatus: 'public',
-                    }
-                  })
-                }
-              )
-              .then(res => res.status === 401 ? logoutYouTube() : res)
-              .then(res => res.json())
-            }
-
-            console.log('ytInsertLiveBroadcast', ytInsertLiveBroadcast)
-
-            // curl --request POST \
-            //   '${endpoint.youtube.base}/liveBroadcasts/bind?id=YOUR_BROADCAST_ID&part=snippet&streamId=YOUR_STREAM_ID&key=[YOUR_API_KEY]'
-
-            if (ytInsertLiveBroadcast.status.recordingStatus === 'notRecording') {
-              let ytBindLiveBroadcast = await fetch(
-                `${endpoint.youtube.base}/liveBroadcasts/bind?part=snippet&id=${ytInsertLiveBroadcast.id}&streamId=${ytLiveStreams?.items?.[0]?.id}`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${store['youtube'].access_token}`,
-                    'Accept': 'application/json',
-                  },
-                }
-              )
-
-              console.log('ytBindLiveBroadcast', ytBindLiveBroadcast)
-
-              // curl --request POST \
-              //   '${endpoint.youtube.base}/liveBroadcasts/transition?broadcastStatus=testing&id=YOUR_BROADCAST_ID&part=snippet%2Cstatus&key=[YOUR_API_KEY]'
-
-              let bstat = 'testing'
-              bstat = 'live'
-              // bstat = 'complete'
-
-              let ytTransitionLiveBroadcast = await fetch(
-                `${endpoint.youtube.base}/liveBroadcasts/transition?part=snippet%2Cstatus&broadcastStatus=${bstat}&id=${ytInsertLiveBroadcast.id}`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${store['youtube'].access_token}`,
-                    'Accept': 'application/json',
-                  },
-                }
-              )
-
-              console.log('ytTransitionLiveBroadcast', ytTransitionLiveBroadcast)
-            }
-          }
-          if (srv === 'tw') {
-            let twitchModifyChannelInfo = await fetch(
-              `${endpoint.twitch.base}/channels?broadcaster_id=${payload.sub}`,
-              {
-                method: 'PATCH',
-                headers: {
-                  'Authorization': `Bearer ${store['twitch'].access_token}`,
-                  'Client-Id': twitchCfg.client_id,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  title: previousElementSibling.value || ''
-                })
-              }
-            )
-          }
+          handleStreamTitle(previousElementSibling)
         }
       }
     }
