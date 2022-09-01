@@ -21,28 +21,8 @@ a {
   font-size: 1.5em;
   text-decoration: none;
 }
-a.btn {
-  display: flex;
-  background-color: #9146FF;
-  color: #fff;
-  text-transform: uppercase;
-  padding: 1rem;
-  min-width: 90%;
-  align-content: center;
-  justify-content: space-evenly;
-}
-.twitch i {
-  background: url(../assets/TwitchGlitchWhite.svg) no-repeat center center;
-  display: inline-block;
-  width: 2rem;
-  height: 2rem;
-}
 a:hover {
   text-decoration: underline;
-}
-a.btn:hover {
-  background-color: #7214ff;
-  text-decoration: none;
 }
 
 h1 {
@@ -79,8 +59,8 @@ h1 {
 #controls label {
   margin: 1.5em 0 0;
 }
-#controls select,
-#controls button {
+select,
+button {
   font-size: 2em;
   padding: .5rem 1rem;
   margin: .1rem;
@@ -88,24 +68,66 @@ h1 {
   cursor: pointer;
   transition: background ease-in-out .1s;
 }
-#controls button[name=toggle] {
+button[name=toggle] {
   background: limegreen;
 }
-#controls button[name=toggle]:hover {
+button[name=toggle]:hover {
   background: lime;
 }
-#controls button[name=reset] {
+button[name=reset] {
   background: orangered;
 }
-#controls button[name=reset]:hover {
+button[name=reset]:hover {
   background: red;
 }
-#controls button.pause[name=toggle] {
+button.pause[name=toggle] {
   background: darkorange;
 }
-#controls button.pause[name=toggle]:hover {
+button.pause[name=toggle]:hover {
   background: orange;
 }
 /* #controls:target {
   display: flex;
 } */
+
+.btn {
+  display: flex;
+  color: #fff;
+  text-transform: uppercase;
+  padding: 1rem;
+  min-width: 90%;
+  align-content: center;
+  justify-content: space-evenly;
+}
+.twitch {
+  background-color: #9146FF;
+  justify-content: center;
+  align-items: center;
+}
+.twitch i {
+  background: url(../assets/TwitchGlitchWhite.svg) no-repeat center center;
+  display: inline-block;
+  width: 4rem;
+  height: 2rem;
+}
+.youtube {
+  background-color: #c20000;
+  justify-content: center;
+  align-items: baseline;
+}
+.youtube i {
+  background: url(../assets/yt_logo_mono_dark.png) no-repeat center center;
+  background-size: contain;
+  display: inline-block;
+  width: 10rem;
+  height: 1.75rem;
+}
+.btn:hover {
+  text-decoration: none;
+}
+.twitch:hover {
+  background-color: #7214ff;
+}
+.youtube:hover {
+  background-color: red;
+}
