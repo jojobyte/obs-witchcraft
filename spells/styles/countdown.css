@@ -1,0 +1,83 @@
+
+@import url(./index.css);
+
+body {
+  justify-content: center;
+}
+h1 {
+  font-size: 18vw;
+  padding: 0 0 0 2rem;
+  margin: 0;
+  transition: all ease-out .3s;
+}
+
+#controls {
+  background-color: #222;
+  display: none;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 5vh;
+  padding: 1rem;
+}
+#controls span {
+  font-size: 5em;
+}
+#controls input[type=range] {
+  display: block;
+  width: 100%;
+  height: 5vh;
+  font-size: 5em;
+}
+#controls div {
+  display: flex;
+}
+#controls label {
+  margin: 1.5em 0 0;
+}
+#controls select,
+#controls button {
+  font-size: 2em;
+  padding: .5rem 1rem;
+  margin: .1rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background ease-in-out .1s;
+}
+#controls button[name=toggle] {
+  background: limegreen;
+}
+#controls button[name=toggle]:hover {
+  background: lime;
+}
+#controls button[name=reset] {
+  background: orangered;
+}
+#controls button[name=reset]:hover {
+  background: red;
+}
+#controls button.pause[name=toggle] {
+  background: darkorange;
+}
+#controls button.pause[name=toggle]:hover {
+  background: orange;
+}
+#controls button[name=sub_30],
+#controls button[name=add_30] {
+  background: dodgerblue;
+}
+#controls button[name=sub_30]:hover,
+#controls button[name=add_30]:hover {
+  background: deepskyblue;
+}
+#controls button[name=sub_15],
+#controls button[name=add_15] {
+  background: turquoise;
+}
+#controls button[name=sub_15]:hover,
+#controls button[name=add_15]:hover {
+  background: aqua;
+}
+#controls:target {
+  display: flex;
+}

@@ -46,13 +46,7 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
   - [ ] Serve countdown on LAN so it can be accessed on phone
   - [ ] *optional* Add sound when nearing times up
 - OBS Binding Ideas - https://github.com/obsproject/obs-browser#js-bindings
-  - [x] addEventListener on obsStreamingStarted to start countdown timer automatically
-    - `window.addEventListener('obsStreamingStarted', console.log)`
-    - https://github.com/obsproject/obs-browser#register-for-event-callbacks
-  - [x] At end of timer, automatically transition to another scene
-    - `window.obsstudio.getScenes(console.log)`
-    - `window.obsstudio.setCurrentScene('Intro')`
-    - https://github.com/obsproject/obs-browser#change-scene
+  - [ ] Checkbox to enable/disable start recording in OBS studio upon timer complete
 
 # Done
 - [x] Test if BroadcastChannel works without server between html files
@@ -64,6 +58,13 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
 - [x] Set minimum value on slider
 - [x] Cleanup the code
 - [x] Test if OBS WebSockets will work in place of BroadcastChannel
+- [x] addEventListener on obsStreamingStarted to start countdown timer automatically
+  - `window.addEventListener('obsStreamingStarted', console.log)`
+  - https://github.com/obsproject/obs-browser#register-for-event-callbacks
+- [x] At end of timer, automatically transition to another scene
+  - `window.obsstudio.getScenes(console.log)`
+  - `window.obsstudio.setCurrentScene('Intro')`
+  - https://github.com/obsproject/obs-browser#change-scene
 
 ## References
  - Part 1 - https://www.youtube.com/watch?v=elhbp_BVCvM

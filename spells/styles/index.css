@@ -26,10 +26,11 @@ a:hover {
 }
 
 h1 {
-  font-size: 4em;
+  font-size: 2em;
   display: flex;
+  text-align: center;
   align-items: center;
-  justify-content: left;
+  justify-content: center;
   line-height: 1;
   color: white;
   margin: 1rem;
@@ -91,43 +92,52 @@ button.pause[name=toggle]:hover {
 } */
 
 .btn {
-  display: flex;
+  display: inline-flex;
   color: #fff;
-  text-transform: uppercase;
+  font-weight: 900;
+  /* text-transform: uppercase; */
   padding: 1rem;
-  min-width: 90%;
+  /* min-width: 90%; */
   align-content: center;
   justify-content: space-evenly;
 }
 .twitch {
-  background-color: #9146FF;
+  /* background-color: #9146FF; */
   justify-content: center;
   align-items: center;
-}
-.twitch i {
-  background: url(../assets/TwitchGlitchWhite.svg) no-repeat center center;
-  display: inline-block;
-  width: 4rem;
+  background: #333 url(../assets/TwitchGlitchPurple.svg) no-repeat center center;
+  background-size: 40px;
+  background-position: 10px 50%;
+  /* display: inline-block; */
+  /* width: 4rem;
+  height: 2rem; */
   height: 2rem;
+  padding-left: 60px;
+  transition: all .1s ease-in-out;
 }
 .youtube {
-  background-color: #c20000;
+  /* background-color: #c20000; */
   justify-content: center;
   align-items: baseline;
-}
-.youtube i {
-  background: url(../assets/yt_logo_mono_dark.png) no-repeat center center;
-  background-size: contain;
-  display: inline-block;
-  width: 10rem;
-  height: 1.75rem;
+  background: #333 url(../assets/yt_logo.svg) no-repeat center center;
+  background-size: 40px;
+  background-position: 10px 50%;
+  /* width: 10rem; */
+  height: 2rem;
+  padding-left: 60px;
+  transition: all .1s ease-in-out;
 }
 .btn:hover {
   text-decoration: none;
 }
 .twitch:hover {
-  background-color: #7214ff;
+  /* background-color: #7214ff; */
+  background-color: #555;
+  background-size: 45px;
+  /* font-size: 180%; */
 }
 .youtube:hover {
-  background-color: red;
+  background-color: #555;
+  background-size: 45px;
+  /* font-size: 180%; */
 }
