@@ -4,7 +4,7 @@
 textarea,
 input {
   border: 0 solid transparent;
-  background-color: black;
+  background-color: #171819;
   color:ivory;
   box-sizing: border-box;
   font-size: 2rem;
@@ -18,6 +18,7 @@ textarea {
   min-height: 8rem;
   max-height: 20rem;
   height: 12rem;
+  margin: .5rem auto;
 }
 fieldset {
   border: 0;
@@ -73,4 +74,60 @@ button:hover {
 fieldset button {
   justify-self: end;
   align-self: flex-start;
+}
+
+fieldset label {
+  user-select: none;
+}
+
+
+
+.ctrls {
+  background-color: #222;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 1rem;
+}
+.ctrls > .textcount {
+  background-color: #171819;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  width: 100%;
+  padding: 0 .5rem;
+  margin: 1rem;
+  border: 1px solid #444;
+  box-sizing: border-box;
+}
+.ctrls > .textcount > label + textarea {
+  outline: 0;
+  /* margin-top: 0; */
+}
+.ctrls span {
+  font-size: 5em;
+}
+.ctrls input[type=range] {
+  display: block;
+  width: 100%;
+  height: 5vh;
+  font-size: 5em;
+}
+.ctrls > .textcount > label {
+  text-transform: capitalize;
+  position: absolute;
+  top: -1rem;
+}
+.ctrls > .textcount > .charcount {
+  font-weight: 900;
+  font-size: 1.5rem;
+  padding: 0;
+  position: absolute;
+  bottom: -1rem;
+  right: 2rem;
+  user-select: none;
 }
