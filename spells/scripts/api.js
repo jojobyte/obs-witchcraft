@@ -1,35 +1,17 @@
-import { storeLogout } from './store.js'
+import {
+  storeLogout,
+  loadBase64,
+} from './store.js'
+import {
+  endpoint,
+} from './constants.js'
 
-export const endpoint = {
-  youtube: {
-    base: 'https://youtube.googleapis.com/youtube/v3',
-    auth: 'https://accounts.google.com/o/oauth2/v2/auth',
-    token: 'https://accounts.google.com/o/oauth2/v2/token',
-    tokeninfo: 'https://accounts.google.com/o/oauth2/v2/tokeninfo',
-    revoketoken: 'https://accounts.google.com/o/oauth2/revoke',
-    // ?token=
-    // token: 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=ACCESS_TOKEN',
-  },
-  twitch: {
-    base: 'https://api.twitch.tv/helix',
-    auth: 'https://id.twitch.tv/oauth2/authorize',
-  }
-}
+// let globalStore = {
+//   youtube: await loadBase64('youtube'),
+//   twitch: await loadBase64('twitch'),
+// }
 
-export const scope = {
-  youtube: {
-    yt: 'https://www.googleapis.com/auth/youtube',
-    ytfs: 'https://www.googleapis.com/auth/youtube.force-ssl',
-    ytpca: 'https://www.googleapis.com/auth/youtubepartner-channel-audit',
-  },
-  twitch: {
-    cmb: 'channel:manage:broadcast',
-    ure: 'user:read:email',
-    oid: 'openid',
-  }
-}
-
-export async function api (
+export async function pureApi (
   url, init, statuses = {}
 ) {
   return await fetch(
@@ -42,10 +24,18 @@ export async function api (
   .then(res => res?.ok && !res?.bodyUsed && !res?.body?.locked ? res.json() : res)
 }
 
-export async function baseApi (
-  service, path, params, init
+export async function api (
+  service, path, params, init,
+  {
+    store = {},
+    cfg = {},
+  },
 ) {
-  return await api(
+  if (!store?.[service]?.access_token) {
+    return {}
+  }
+
+  return await pureApi(
     `${endpoint[service].base}/${path}?${
       new URLSearchParams(params)
     }`,
@@ -57,16 +47,193 @@ export async function baseApi (
     },
     {
       204: () => true,
-      401: () => storeLogout(service),
+      // 401: () => storeTokenRefresh(service),
+      401: (res) => storeLogout(service, res),
     }
   )
-  // .then(res => res.status === 401 ? storeLogout(service) : res)
-  // .then(res => res?.ok ? res.json() : res)
 }
 
-export function API(cfg = {}) {
-  globalThis.cfg = cfg
-  return baseApi.bind(globalThis)
+export async function youtubeBindStream(
+  data,
+  {
+    store,
+    cfg,
+  }
+) {
+  if (
+    data.youtube?.broadcast?.status?.recordingStatus === 'notRecording'
+  ) {
+    let bindParams = {
+      id: data.youtube.broadcast.id,
+      streamId: data.youtube.streams?.items?.[0]?.id,
+      part: ['snippet'],
+    }
+    data.youtube.bind = await api(
+      'youtube',
+      'liveBroadcasts/bind',
+      bindParams,
+      {
+        method: 'POST',
+      },
+      {
+        store,
+        cfg,
+      },
+    )
+
+    console.log('data.youtube.bind', data.youtube.bind)
+
+    let transitionParams = {
+      id: data.youtube.broadcast.id,
+      part: ['snippet','status'],
+      broadcastStatus: 'testing',
+    }
+    // transitionParams.broadcastStatus = 'live'
+    // transitionParams.broadcastStatus = 'complete'
+    transitionParams.broadcastStatus = data.youtube.broadcast.status.lifeCycleStatus
+
+    data.youtube.transition = await api(
+      'youtube',
+      'liveBroadcasts/transition',
+      transitionParams,
+      {
+        method: 'POST',
+      },
+      {
+        store,
+        cfg,
+      },
+    )
+
+    console.log('data.youtube.transition', data.youtube.transition)
+  }
+
+  return data.youtube
 }
 
-export default API
+export async function initYoutube(
+  data,
+  {
+    store,
+    cfg,
+  },
+) {
+  data.youtube.broadcasts = await api(
+    'youtube',
+    'liveBroadcasts',
+    {
+      part: ['id','snippet','contentDetails','status'],
+      mine: 'true',
+      broadcastType: 'all',
+      maxResults: 50,
+    },
+    {},
+    {
+      store,
+      cfg,
+    },
+  )
+
+  console.log('data.youtube.broadcasts init', data.youtube.broadcasts)
+
+  data.youtube.broadcasts = await data.youtube.broadcasts?.items?.
+    filter(
+      item => item.status.lifeCycleStatus !== 'complete'
+    )
+
+  console.log('data.youtube.broadcasts filter', data.youtube.broadcasts)
+
+  data.youtube.broadcast = await data.youtube.broadcasts?.
+    find(
+      ({
+        status: { lifeCycleStatus, recordingStatus }
+      }) => [
+        'live',
+        'ready' // created || live || complete
+      ].includes(lifeCycleStatus) && [
+        'recording',
+        'notRecording'
+      ].includes(recordingStatus)
+    )
+
+  if (!data.youtube?.broadcast) {
+    data.youtube.broadcast = await data.youtube.broadcasts?.
+      find(
+        cast => [
+          'created',
+          'testing',
+          // 'ready',
+          // created || live || complete
+        ].includes(cast.status.lifeCycleStatus)
+      )
+  }
+
+  // data.youtube.videos = await api(
+  //   'youtube',
+  //   'videos',
+  //   {
+  //     part: ['id','snippet','contentDetails','status','liveStreamingDetails','statistics'],
+  //     id: 'VqmwE4I3JKM',
+  //     // fields: '',
+  //     // mine: 'true',
+  //     // broadcastType: 'all',
+  //     maxResults: 50,
+  //   },
+  //   {},
+  //   {
+  //     store,
+  //     cfg,
+  //   },
+  // )
+
+  // console.log('data.youtube.videos', data.youtube.videos)
+
+  console.log('data.youtube.broadcast', data.youtube.broadcast)
+
+  data.youtube.streams = await api(
+    'youtube',
+    'liveStreams',
+    {
+      part: ['snippet','contentDetails','status'],
+      mine: 'true',
+    },
+    {},
+    {
+      store,
+      cfg,
+    },
+  )
+
+  console.log('data.youtube.streams', data.youtube.streams)
+
+  return data.youtube
+}
+
+export async function testToken(
+  service,
+  {
+    store,
+    cfg,
+  }
+) {
+  let hdrs = {}
+  if (service === 'twitch') {
+    hdrs['Authorization'] = `OAuth ${store.twitch.access_token}`
+  }
+  let tokenInfo = await pureApi(
+    `${
+      endpoint[service].validate
+    }?${
+      new URLSearchParams(cfg[service].validate)
+    }`,
+    {
+      headers: {
+        // ...cfg[service].headers(),
+        ...hdrs
+      },
+    },
+  )
+  console.log('api tokenInfo', service, tokenInfo)
+}
+
+export default api

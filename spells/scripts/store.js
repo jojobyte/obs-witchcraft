@@ -1,46 +1,102 @@
 import {
   hashToObject,
+  fromBinary,
+  toBinary,
+  b64DecodeUnicode,
+  b64EncodeUnicode,
 } from './utils.js'
+import {
+  endpoint,
+} from './constants.js'
+import {
+  pureApi,
+} from './api.js'
+import {
+  Config
+} from './config.js'
 
-let store = {}
+// globalThis.store = {}
 
-export function storeBase64 (
+// let globalStore = {
+//   youtube: await loadBase64('youtube'),
+//   twitch: await loadBase64('twitch'),
+// }
+// let cfg = Config(globalStore)
+
+export async function storeBase64 (
   service,
   extraData = {}
 ) {
-  store[service] = {
-    ...(store[service] || {}),
+  let storeSrv = await loadBase64(service)
+  storeSrv = {
+    ...(storeSrv || {}),
     ...extraData
   }
-  localStorage.setItem(service,
-    window.btoa(JSON.stringify(store[service]))
+  await localStorage.setItem(service,
+    await b64EncodeUnicode(JSON.stringify(storeSrv))
   )
-  // console.log('storeBase64', service, store[service])
-  return store
+  console.debug('storeBase64', service, storeSrv)
+  return storeSrv
 }
 
 export async function loadBase64 (service) {
-  store[service] = localStorage.getItem(service)
-  store[service] = store[service] ? await JSON.parse(await window.atob(store[service])) : ''
-  // console.log('loadBase64', service, store[service])
-  return store
+  let storeSrv = await localStorage.getItem(service)
+  storeSrv = storeSrv ? await JSON.parse(b64DecodeUnicode(storeSrv)) : {}
+  console.debug('loadBase64', service, storeSrv)
+  return storeSrv
 }
 
-export function storeCredentials (
+export async function storeCredentials (
   service, // youtube | twitch
 ) {
+  let hash = hashToObject(location.hash)
+
+  console.log('storeCredentials', service, location.hash, hash)
+
   if (
-    location.hash.indexOf('access_token') > -1
-    // location.hash.indexOf('id_token') === -1 // twitch only
+    hash.access_token
   ) {
-    // console.log('storeCredentials', service, hashToObject())
-    storeBase64(service, hashToObject())
+    const updatedStore = await storeBase64(service, hash)
     history.replaceState(null, '', 'info.html')
+    return updatedStore
   }
+  return await loadBase64(service)
 }
 
-export function storeLogout (service) {
-  console.log('storeLogout', service)
-  storeBase64(service, { access_token: '' })
+export async function storeTokenRefresh (service,
+  {
+    store,
+    cfg,
+  },
+) {
+  let tokenRefreshRes
+
+  if (service === 'youtube') {
+    tokenRefreshRes = await pureApi(
+      `${
+        endpoint[service].auth
+      }?${
+        new URLSearchParams(cfg[service].auth)
+      }`,
+      {
+        headers: {
+          ...cfg[service].headers(),
+        },
+      },
+    )
+  }
+  console.log('storeTokenRefresh', service, tokenRefreshRes)
+  // storeBase64(service, { access_token: '' })
+  // storeLogout(service)
+  // window.location.reload()
+}
+
+export async function storeLogout (service, res) {
+  // let storeSrv = await loadBase64(service)
+  console.log('storeLogout', service, res)
+  // if (storeSrv.access_token) {
+  // }
+  await storeBase64(service, { access_token: '' })
+  return true
   // window.location.reload()
 }
