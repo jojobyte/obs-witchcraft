@@ -38,8 +38,14 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
 - App / Web App
   - [ ] Handle Stream Setup via API's
     - [ ] Browser Dock UI to set:
-      - [ ] Title
+      - [x] Title
+        - [ ] Add character count
+          - [ ] Youtube Max: 100
+          - [ ] Twitch Max: 140
+      - [ ] Tags
       - [ ] Description
+        - [ ] Add character count
+          - [ ] Youtube Max: 5000
       - [ ] Thumbnail/Placeholder
       - [ ] Schedule Stream Start
     - [ ] Route used as Browser Source to show in OBS

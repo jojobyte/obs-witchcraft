@@ -1,0 +1,9 @@
+{
+	http_port 8888
+	https_port 8443
+}
+
+localhost:8443
+
+file_server
+
