@@ -37,18 +37,20 @@ A collection of OBS Studio Utilities built with Vanilla JS, CSS & HTML
     - [ ] Research if any of these tools can also be made into Twitch Extensions
 - App / Web App
   - [ ] Handle Stream Setup via API's
+    - [x] Route used as Browser Source to show in OBS
     - [ ] Browser Dock UI to set:
       - [x] Title
-        - [ ] Add character count
+        - [x] Add character count
           - [ ] Youtube Max: 100
           - [ ] Twitch Max: 140
-      - [ ] Tags
       - [ ] Description
         - [ ] Add character count
           - [ ] Youtube Max: 5000
+      - [ ] Tags
+        - REST API does not have custom tags
+        - Looks like they are available in GraphQL but that is not a public API
       - [ ] Thumbnail/Placeholder
       - [ ] Schedule Stream Start
-    - [ ] Route used as Browser Source to show in OBS
   - [ ] Serve countdown on LAN so it can be accessed on phone
   - [ ] *optional* Add sound when nearing times up
 - OBS Binding Ideas - https://github.com/obsproject/obs-browser#js-bindings
