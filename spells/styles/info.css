@@ -1,11 +1,15 @@
 
 @import url(./index.css);
 
+* {
+  font-family: sans-serif, "Noto Color Emoji";
+}
+
 textarea,
 input {
   border: 0 solid transparent;
   background-color: #171819;
-  color:ivory;
+  color: ivory;
   box-sizing: border-box;
   font-size: 2rem;
   max-width: 98vw;
@@ -85,6 +89,7 @@ fieldset label {
 .ctrls {
   background-color: #222;
   display: flex;
+  /* display: none; */
   justify-content: center;
   flex-direction: column;
   align-items: center;
@@ -130,4 +135,17 @@ fieldset label {
   bottom: -1rem;
   right: 2rem;
   user-select: none;
+}
+
+#infoApp:target {
+  display: flex;
+}
+
+#controls,
+#controls:target + h1 {
+  display: none;
+}
+
+#controls:target {
+  display: block;
 }

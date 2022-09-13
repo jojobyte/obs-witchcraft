@@ -21,9 +21,7 @@ export default async function (
     return `<div id="${rootId}" class="textcount">
       <label for="stream_${name}">${name}</label>
       <textarea id="stream_${name}" name="stream_${name}">${
-        App.state.youtube?.broadcast?.snippet?.[prop] ||
-        App.state.twitch?.channel?.[prop] ||
-        ''
+        Component.getValue()
       }</textarea>
       <div class="charcount">
         ${Component.state.charcount}
@@ -36,6 +34,19 @@ export default async function (
       App.state.youtube?.broadcast?.snippet?.[prop] ||
       App.state.twitch?.channel?.[prop]
     )?.length || 0,
+  }
+
+  Component.getValue = function getValue () {
+    if (
+      !App.state.youtube?.broadcast &&
+      !App.state.twitch?.channel
+    ) {
+      return ''
+    }
+
+    return App.state.youtube?.broadcast?.snippet?.[prop] ||
+    App.state.twitch?.channel?.[prop] ||
+    ''
   }
 
   Component.update = function update (event) {

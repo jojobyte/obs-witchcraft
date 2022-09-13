@@ -32,7 +32,14 @@ export async function storeBase64 (
     ...(storeSrv || {}),
     ...extraData
   }
-  await localStorage.setItem(service,
+  // localStorage.setItem(service,
+  //   window.btoa(
+  //     encodeURIComponent(
+  //       JSON.stringify(storeSrv)
+  //     )
+  //   )
+  // )
+  localStorage.setItem(service,
     await b64EncodeUnicode(JSON.stringify(storeSrv))
   )
   console.debug('storeBase64', service, storeSrv)
@@ -41,7 +48,14 @@ export async function storeBase64 (
 
 export async function loadBase64 (service) {
   let storeSrv = await localStorage.getItem(service)
-  storeSrv = storeSrv ? await JSON.parse(b64DecodeUnicode(storeSrv)) : {}
+  // storeSrv = storeSrv ? await JSON.parse(
+  //   decodeURIComponent(
+  //     window.atob(storeSrv)
+  //   )
+  // ) : {}
+  storeSrv = storeSrv ? await JSON.parse(
+    b64DecodeUnicode(storeSrv)
+  ) : {}
   console.debug('loadBase64', service, storeSrv)
   return storeSrv
 }
@@ -57,7 +71,7 @@ export async function storeCredentials (
     hash.access_token
   ) {
     const updatedStore = await storeBase64(service, hash)
-    history.replaceState(null, '', 'info.html')
+    history.replaceState(null, '', 'info.html#controls')
     return updatedStore
   }
   return await loadBase64(service)
