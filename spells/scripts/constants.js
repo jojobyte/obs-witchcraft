@@ -19,6 +19,7 @@ export const scopes = {
   youtube: {
     yt: 'https://www.googleapis.com/auth/youtube',
     ytfs: 'https://www.googleapis.com/auth/youtube.force-ssl',
+    ytp: 'https://www.googleapis.com/auth/youtubepartner',
     ytpca: 'https://www.googleapis.com/auth/youtubepartner-channel-audit',
   },
   twitch: {

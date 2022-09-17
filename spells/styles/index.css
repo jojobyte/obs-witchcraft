@@ -101,7 +101,7 @@ button.pause[name=toggle]:hover {
   align-content: center;
   justify-content: space-evenly;
 }
-.twitch {
+.btn.twitch {
   /* background-color: #9146FF; */
   justify-content: center;
   align-items: center;
@@ -115,7 +115,7 @@ button.pause[name=toggle]:hover {
   padding-left: 60px;
   transition: all .1s ease-in-out;
 }
-.youtube {
+.btn.youtube {
   /* background-color: #c20000; */
   justify-content: center;
   align-items: baseline;
@@ -130,13 +130,13 @@ button.pause[name=toggle]:hover {
 .btn:hover {
   text-decoration: none;
 }
-.twitch:hover {
+.btn.twitch:hover {
   /* background-color: #7214ff; */
   background-color: #555;
   background-size: 45px;
   /* font-size: 180%; */
 }
-.youtube:hover {
+.btn.youtube:hover {
   background-color: #555;
   background-size: 45px;
   /* font-size: 180%; */

@@ -5,6 +5,11 @@
   font-family: sans-serif, "Noto Color Emoji";
 }
 
+
+h1 {
+  white-space: pre-wrap;
+  unicode-bidi: embed;
+}
 textarea,
 input {
   border: 0 solid transparent;
@@ -135,6 +140,76 @@ fieldset label {
   bottom: -1rem;
   right: 2rem;
   user-select: none;
+}
+div.ctrls {
+  flex-direction: row;
+  justify-content: space-around;
+}
+section.status {
+  display: grid;
+  width: 100%;
+  justify-content: space-around;
+  padding: 1rem;
+  grid-gap: 0 .5rem;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1.5fr;
+  grid-template-areas:
+    "title title"
+    "status viewers";
+}
+section.status h3 {
+  grid-area: title;
+  text-align: center;
+  margin: 0;
+}
+section.status article {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+section.status h3 {
+  font-size: 1rem;
+  font-weight: 100;
+  /* font-style: italic; */
+  opacity: .5;
+  text-transform: uppercase;
+}
+section.status article h3 {
+  flex: 0 1 auto;
+}
+section.status article strong {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  text-transform: capitalize;
+  text-align: center;
+}
+section.status article.status {
+  grid-area: status;
+}
+section.status article.viewers {
+  grid-area: viewers;
+}
+
+
+section.status > h3 {
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.status.twitch > h3:before {
+  display: block;
+  line-height: .5;
+	width: 20px;
+  margin-right: 1rem;
+	content: url(../assets/TwitchGlitchPurple.svg);
+}
+.status.youtube > h3:before {
+  display: block;
+  line-height: .5;
+	width: 20px;
+  margin-right: 1rem;
+	content: url(../assets/yt_logo.svg);
 }
 
 #infoApp:target {

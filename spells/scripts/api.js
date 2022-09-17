@@ -84,7 +84,7 @@ export async function youtubeBindStream(
     console.log('data.youtube.bind', data.youtube.bind)
 
     let transitionParams = {
-      id: data.youtube.broadcast.id,
+      id: data.youtube.broadcast?.id,
       part: ['snippet','status'],
       broadcastStatus: 'testing',
     }
@@ -122,7 +122,7 @@ export async function initYoutube(
     'youtube',
     'liveBroadcasts',
     {
-      part: ['id','snippet','contentDetails','status'],
+      part: ['id','snippet','contentDetails','status', 'statistics'],
       mine: 'true',
       broadcastType: 'all',
       maxResults: 50,
@@ -205,6 +205,25 @@ export async function initYoutube(
   )
 
   console.log('data.youtube.streams', data.youtube.streams)
+
+  if (data.youtube.broadcast?.id) {
+    data.youtube.video = await api(
+      'youtube',
+      'videos',
+      {
+        id: data.youtube.broadcast.id,
+        part: ['liveStreamingDetails'],
+        // fields: ['items','liveStreamingDetails','concurrentViewers'],
+      },
+      {},
+      {
+        store,
+        cfg,
+      },
+    )
+
+    console.log('data.youtube.video', data.youtube.video)
+  }
 
   return data.youtube
 }

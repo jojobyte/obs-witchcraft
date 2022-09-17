@@ -52,6 +52,7 @@ export default async function (
   Component.update = function update (event) {
     // event.preventDefault()
     // event.stopPropagation()
+    App.broadcast.postMessage(['keyup'+name, event.target?.value])
 
     Component.state.charcount =
       event.target?.value?.length

@@ -24,6 +24,7 @@ import apiSetup from './components/apiSetup.js'
 import connectServiceBtn from './components/connectServiceBtn.js'
 import serviceCheckbox from './components/serviceCheckbox.js'
 import textWithCount from './components/textWithCount.js'
+import streamStatus from './components/streamStatus.js'
 
 let streamData = {
   youtube: {
@@ -47,11 +48,19 @@ if (!localStorage.getItem('REDIRECT_URI')) {
 
 const InfoApp = await (
   async function (rootId = 'app') {
+    let streamTitle
+
     function App () {
-      document.getElementById('controls')
-        .insertAdjacentHTML('afterend', `
-          <h1>${App.components.streamTitle.getValue()}</h1>
-        `)
+      streamTitle = document.getElementById('streamTitle')
+
+      if (!streamTitle) {
+        streamTitle = document.createElement('h1')
+        streamTitle.id = 'streamTitle'
+        document.getElementById('controls')
+          .insertAdjacentElement('afterend', streamTitle)
+      }
+
+      streamTitle.innerHTML = App.components.streamTitle.getValue()
 
       return `
         <h1>Stream Info</h1>
@@ -66,6 +75,11 @@ const InfoApp = await (
         )}
         ${App.components.setupYoutube()}
         ${App.components.setupTwitch()}
+
+        <div class="ctrls">
+          ${App.components.streamStatusYoutube()}
+          ${App.components.streamStatusTwitch()}
+        </div>
 
         <form id="ctrls" class="ctrls">
           ${App.components.streamTitle()}
@@ -112,6 +126,29 @@ const InfoApp = await (
     App.components.connectService = await connectServiceBtn(App)
     App.components.serviceCheckbox = await serviceCheckbox(App, { cfg })
     App.components.streamTitle = await textWithCount('title', App)
+    App.components.streamStatusYoutube = await streamStatus(
+      'YouTube',
+      [
+        'broadcast.status.lifeCycleStatus',
+        'video.liveStreamingDetails.concurrentViewers'
+      ],
+      App,
+    )
+    App.components.streamStatusTwitch = await streamStatus(
+      'Twitch',
+      [
+        'stream.type',
+        'stream.viewer_count'
+      ],
+      App,
+    )
+
+    App.broadcast = new BroadcastChannel(`info-${rootId}`)
+    App.broadcastHandler = event => {
+      console.log('app broadcast', event)
+      streamTitle.innerHTML = event.data[1]
+      // if (event.data[0] === 'autostart') {}
+    }
 
     App.render = function render () {
       cfg = Config(App.state)
@@ -155,6 +192,7 @@ const InfoApp = await (
 
     App.teardown = function teardown () {
       // window.removeEventListener('hashchange', App.hashListener)
+      App.broadcast.removeEventListener('message', App.broadcastHandler)
 
       return App
     }
@@ -168,6 +206,9 @@ const InfoApp = await (
         )
 
       App.hashListener = handleHashChange({ store: App.state, cfg })
+
+      // bc.onmessage = (event) => {}
+      App.broadcast.addEventListener('message', App.broadcastHandler)
 
       // window.addEventListener('hashchange', App.hashListener)
 
@@ -192,7 +233,8 @@ const InfoApp = await (
 
       App.state.youtube = await storeBase64('youtube', {
         broadcast: streamData.youtube.broadcast,
-        stream: streamData.youtube.streams
+        stream: streamData.youtube.streams,
+        video: streamData.youtube.video
       })
 
       // testToken('youtube')
@@ -223,9 +265,29 @@ const InfoApp = await (
         )
       )?.data?.[0]
 
+      streamData.twitch.stream = (
+        await api(
+          'twitch',
+          'streams',
+          {
+            user_id: parseJwt(App.state.twitch?.id_token)?.sub
+          },
+          { method: 'GET', },
+          { store: App.state, cfg },
+        )
+      )?.data?.[0]
+
+      console.log(
+        'streamData.twitch.stream',
+        streamData.twitch.stream
+      )
+
       App.state.twitch = await storeBase64(
         'twitch',
-        { channel: streamData.twitch.channel }
+        {
+          channel: streamData.twitch.channel,
+          stream: streamData.twitch.stream,
+        }
       )
 
       console.log('streamData.twitch.channel', streamData.twitch.channel)

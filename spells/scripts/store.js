@@ -71,9 +71,11 @@ export async function storeCredentials (
     hash.access_token
   ) {
     const updatedStore = await storeBase64(service, hash)
-    history.replaceState(null, '', 'info.html#controls')
+    history.replaceState({}, '', 'info.html#controls')
+    window.location.reload()
     return updatedStore
   }
+
   return await loadBase64(service)
 }
 

@@ -66,3 +66,21 @@ export function authLink(service, cfg) {
     new URLSearchParams(cfg[service].auth)
   }`
 }
+
+export function getPath(obj, path, delim = '.') {
+  if (typeof path === 'string') {
+    path = path.split(delim)
+  }
+
+  if (path.length === 0) {
+    return obj
+  }
+
+  let key = path.shift()
+
+  if (
+    obj?.hasOwnProperty(key)
+  ) {
+    return getPath(obj[key], path, delim)
+  }
+}

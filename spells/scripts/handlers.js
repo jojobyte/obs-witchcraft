@@ -157,7 +157,7 @@ export async function handleStreamTitle (
         // window.location.reload()
         // return
       // }
-    } else  {
+    } else {
       data.youtube.broadcast = await api(
         'youtube',
         'liveBroadcasts',
