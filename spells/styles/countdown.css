@@ -36,6 +36,13 @@ h1 {
 .ctrls label {
   margin: 1.5em 0 0;
 }
+.ctrls label + p {
+  margin: 0 0 1em;
+}
+.ctrls h2 ~ label {
+  margin: 0 0 1em;
+  float: left;
+}
 .ctrls select,
 .ctrls button {
   font-size: 2em;

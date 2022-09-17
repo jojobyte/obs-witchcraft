@@ -25,10 +25,21 @@
     <button name="add_15">+15</button>
   </div>
   <label>
-    <input name="autostart" type="checkbox" />
-    Auto-start countdown on streaming started
+    <input name="auto_start" type="checkbox" />
+    Auto-start on streaming started
   </label>
-  <p>When time runs out switch to this scene</p>
+  <h2>When time runs out</h2>
+  <aside>
+    <label>
+      <input name="auto_record" type="checkbox" />
+      start recording
+    </label>
+    <label>
+      <input name="auto_reset" type="checkbox" />
+      reset countdown
+    </label>
+  </aside>
+  <p>switch to this scene</p>
   <select id="scenesSelector">
     <option>---</option>
   </select>

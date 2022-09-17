@@ -9,13 +9,24 @@ if (!localStorage.getItem('countdown')) {
 if (!localStorage.getItem('autostart')) {
   localStorage.setItem('autostart', false)
 }
+if (!localStorage.getItem('autorecord')) {
+  localStorage.setItem('autorecord', false)
+}
+if (!localStorage.getItem('autoreset')) {
+  localStorage.setItem('autoreset', false)
+}
 
 let countdownInterval, switchToScene
 let countdownRunning = false
+let obsRecording = false
 
 let bc = new BroadcastChannel('countdown')
-let storeCountdown = localStorage.getItem('countdown')
-let autoStartCountdown = localStorage.getItem('autostart')
+let storeCountdown = parseInt(localStorage.getItem('countdown'), 10)
+let checkboxes = {
+  start: JSON.parse(localStorage.getItem('autostart')),
+  record: JSON.parse(localStorage.getItem('autorecord')),
+  reset: JSON.parse(localStorage.getItem('autoreset')),
+}
 
 let countdownElement = document.querySelector('h1')
 let inputElement = document.querySelector('#controls input')
@@ -23,16 +34,44 @@ let inputValueElement = document.querySelector('#controls span')
 let buttonElements = document.querySelector('#controls')
 let toggleButtonElement = document.querySelector('#controls button[name=toggle]')
 let scenesSelectorElement = document.querySelector('#scenesSelector')
+let checkboxAutoStartElement = document.querySelector('#controls input[name=auto_start]')
+let checkboxAutoRecordElement = document.querySelector('#controls input[name=auto_record]')
+let checkboxAutoResetElement = document.querySelector('#controls input[name=auto_reset]')
+
+// switchToScene = scenesSelectorElement?.value
+checkboxAutoStartElement.checked = checkboxes.start
+checkboxAutoRecordElement.checked = checkboxes.record
+checkboxAutoResetElement.checked = checkboxes.reset
+
+window.obsstudio = window.obsstudio || (function(){
+  return {
+    setCurrentScene: (e) => console.log('obsstudio.setCurrentScene', e),
+    startRecording: (e) => console.log('obsstudio.startRecording', e),
+    getScenes: (e) => console.log('obsstudio.getScenes', e),
+    getStatus: (e) => console.log('obsstudio.getStatus', e),
+  }
+})()
 
 function updateCountdown() {
-  if (!countdownRunning) {
-    return clearInterval(countdownInterval)
-  }
-
   storeCountdown -= second;
 
   if (storeCountdown < 0) {
     storeCountdown = 0;
+    countdownRunning = false
+
+    if (switchToScene) {
+      window.obsstudio.setCurrentScene(switchToScene)
+    }
+    if (!obsRecording && checkboxes.record) {
+      window.obsstudio.startRecording()
+    }
+    if (checkboxes.reset) {
+      resetButton()
+    }
+  }
+
+  if (!countdownRunning) {
+    return clearInterval(countdownInterval)
   }
 
   countdownElement.textContent = getCountdownText(storeCountdown)
@@ -44,12 +83,7 @@ function updateCountdown() {
   }
 
   if (storeCountdown === 0) {
-    countdownRunning = false
-    clearInterval(countdownInterval)
     updateButton(toggleButtonElement)
-    if (switchToScene) {
-      window.obsstudio.setCurrentScene(switchToScene)
-    }
   }
 }
 
@@ -88,7 +122,7 @@ function toggleButton () {
 
 function resetButton () {
   clearInterval(countdownInterval)
-  storeCountdown = localStorage.getItem('countdown')
+  storeCountdown = parseInt(localStorage.getItem('countdown'), 10)
   countdownRunning = false
   countdownElement.textContent = getCountdownText(storeCountdown)
   countdownElement.style.fontSize = `${initalFontSize}vw`
@@ -130,11 +164,11 @@ buttonElements.addEventListener('click', event => {
       storeCountdown += second * sec
       bc.postMessage([name, sec])
     }
-    if (name === 'autostart') {
-      console.log('autostart target', event?.target?.checked)
-      autoStartCountdown = event?.target?.checked
-      localStorage.setItem('autostart', autoStartCountdown)
-      bc.postMessage([name, autoStartCountdown])
+    if (name === 'auto') {
+      console.log(`auto${sec} target`, event?.target?.checked)
+      checkboxes[sec] = event?.target?.checked
+      localStorage.setItem(`auto${sec}`, checkboxes[sec])
+      bc.postMessage([name, checkboxes[sec]])
     }
   }
 })
@@ -142,6 +176,7 @@ buttonElements.addEventListener('click', event => {
 scenesSelectorElement.addEventListener('change', event => {
   console.log('scene selector change', event?.target?.value)
   bc.postMessage(['countdownScene', event?.target?.value])
+  switchToScene = event?.target?.value
 })
 
 // console.log('window.obsstudio', window.obsstudio)
@@ -159,24 +194,42 @@ scenesSelectorElement.addEventListener('change', event => {
 // })
 
 window.addEventListener('obsStreamingStarted', event => {
-  console.log('obsStreamingStarted', autoStartCountdown, event)
-  if (autoStartCountdown) {
+  console.log('obsStreamingStarted', checkboxes.start, event)
+  if (checkboxes.start) {
     toggleButton()
     updateButton(toggleButtonElement)
     bc.postMessage(['toggle', countdownRunning])
   }
 })
 
+window.addEventListener('obsRecordingStarted', event => {
+  console.log('obsRecordingStarted', event)
+  obsRecording = true
+  bc.postMessage(['recording', obsRecording])
+})
+
+window.addEventListener('obsRecordingStopped', event => {
+  console.log('obsRecordingStopped', event)
+  obsRecording = false
+  bc.postMessage(['recording', obsRecording])
+})
+
 window.obsstudio?.getScenes(function (scenes) {
-  console.log(scenes)
+  console.log('obsstudio.getScenes', scenes)
 
   bc.postMessage(['scenes', scenes])
+})
+
+window.obsstudio?.getStatus(function (status) {
+	console.log('obsstudio.getStatus', status)
+  bc.postMessage(['status', status])
+  obsRecording = status.recording
 })
 
 bc.onmessage = (event) => {
   if (event.data[0] === 'autostart') {
     console.log('autostart browser dock', event.data[1])
-    autoStartCountdown = event.data[1]
+    checkboxes.start = event.data[1]
     localStorage.setItem('autostart', event.data[1])
   }
   if (event.data[0] === 'countdownScene') {
@@ -193,6 +246,9 @@ bc.onmessage = (event) => {
     }
 
     scenesSelectorElement.innerHTML = sceneStr
+  }
+  if (event.data[0] === 'recording') {
+    obsRecording = event.data[1]
   }
   if (event.data[0] === 'sub') {
     storeCountdown -= second * event.data[1]
