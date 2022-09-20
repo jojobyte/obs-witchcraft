@@ -6,11 +6,6 @@ import {
   endpoint,
 } from './constants.js'
 
-// window.pollWorker = window.pollWorker || new Worker('scripts/worker.js')
-// window.pollWorker.onmessage = function(e) {
-//   console.info('api from worker:', e.data)
-// }
-
 // let globalStore = {
 //   youtube: await loadBase64('youtube'),
 //   twitch: await loadBase64('twitch'),
@@ -35,7 +30,6 @@ export async function api (
     store = {},
     cfg = {},
     ep = 'base',
-    poll = false,
     pollWorker
   },
 ) {
@@ -53,7 +47,7 @@ export async function api (
     ...init
   }
 
-  if (pollWorker && poll) {
+  if (pollWorker) {
     pollWorker.postMessage([apiEndpoint, apiOptions])
   }
 
@@ -279,7 +273,6 @@ export async function initYoutube(
       {
         store,
         cfg,
-        poll: true,
         pollWorker,
       },
     ))?.items?.[0]

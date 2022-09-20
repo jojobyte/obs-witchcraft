@@ -79,8 +79,8 @@ const InfoApp = await (
         ${App.components.setupTwitch()}
 
         <div class="ctrls">
-          ${App.components.streamStatusYoutube()}
           ${App.components.streamStatusTwitch()}
+          ${App.components.streamStatusYoutube()}
         </div>
 
         <form id="ctrls" class="ctrls">
@@ -229,6 +229,8 @@ const InfoApp = await (
       // window.removeEventListener('hashchange', App.hashListener)
       App.broadcast.removeEventListener('message', App.broadcastHandler)
 
+      window.pollWorker.removeEventListener('message', App.pollingHandler)
+
       return App
     }
 
@@ -302,8 +304,7 @@ const InfoApp = await (
             broadcaster_id: parseJwt(App.state.twitch?.id_token)?.sub
           },
           { method: 'GET', },
-          { store: App.state, cfg,
-            pollWorker: window.pollWorker, },
+          { store: App.state, cfg, },
         )
       )?.data?.[0]
 
@@ -319,7 +320,6 @@ const InfoApp = await (
             store: App.state,
             cfg,
             pollWorker: window.pollWorker,
-            poll: true,
           },
         )
       )?.data?.[0]
