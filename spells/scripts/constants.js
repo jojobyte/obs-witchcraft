@@ -5,6 +5,7 @@ export const endpoint = {
     token: 'https://accounts.google.com/o/oauth2/token',
     validate: 'https://accounts.google.com/o/oauth2/tokeninfo',
     revoketoken: 'https://accounts.google.com/o/oauth2/revoke',
+    assets: 'https://www.googleapis.com/youtube',
     // ?token=
     // token: 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=ACCESS_TOKEN',
   },

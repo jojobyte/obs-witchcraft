@@ -63,7 +63,7 @@ export async function loadBase64 (service) {
 export async function storeCredentials (
   service, // youtube | twitch
 ) {
-  let hash = hashToObject(location.hash)
+  let { scope, token_type,  ...hash } = hashToObject(location.hash)
 
   console.log('storeCredentials', service, location.hash, hash)
 

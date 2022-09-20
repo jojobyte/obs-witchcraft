@@ -1,6 +1,9 @@
 import {
   randStr,
 } from '../utils.js'
+import {
+  storeBase64,
+} from '../store.js'
 
 export default async function (
   name,
@@ -38,21 +41,29 @@ export default async function (
 
   Component.getValue = function getValue () {
     if (
+      !App.state.local?.title &&
       !App.state.youtube?.broadcast &&
       !App.state.twitch?.channel
     ) {
       return ''
     }
 
-    return App.state.youtube?.broadcast?.snippet?.[prop] ||
-    App.state.twitch?.channel?.[prop] ||
-    ''
+    return (
+      App.state.local?.title ||
+      App.state.youtube?.broadcast?.snippet?.[prop] ||
+      App.state.twitch?.channel?.[prop] ||
+      ''
+    )
   }
 
-  Component.update = function update (event) {
+  Component.update = async function update (event) {
     // event.preventDefault()
     // event.stopPropagation()
-    App.broadcast.postMessage(['keyup'+name, event.target?.value])
+    App.broadcast.postMessage(['keyup', name, event.target?.value])
+
+    App.state.local = await storeBase64('local', {
+      [name]: event.target?.value,
+    })
 
     Component.state.charcount =
       event.target?.value?.length

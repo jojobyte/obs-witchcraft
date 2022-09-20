@@ -43,6 +43,8 @@ if (!localStorage.getItem('REDIRECT_URI')) {
   localStorage.setItem('REDIRECT_URI', location.origin + location.pathname)
 }
 
+window.pollWorker = new Worker('scripts/worker.js')
+
 // Based on:
 // https://dev.to/artydev/comment/1c9hp
 
@@ -83,6 +85,18 @@ const InfoApp = await (
 
         <form id="ctrls" class="ctrls">
           ${App.components.streamTitle()}
+          <div>
+            ${
+              App.state.local?.title !== App.state.youtube?.broadcast?.snippet?.title ? 'YouTube out of sync' : ''
+            }
+          </div>
+          <div>
+            ${
+              (
+                App.state.local?.title !== App.state.twitch?.channel?.title ? 'Twitch out of sync' : ''
+              )
+            }
+          </div>
           <fieldset>
             <section>
               ${App.components.serviceCheckbox(
@@ -112,6 +126,7 @@ const InfoApp = await (
 
     App.state = {
       viewers: 0,
+      local: await loadBase64('local'),
       youtube: await loadBase64('youtube'),
       twitch: await loadBase64('twitch'),
     }
@@ -145,9 +160,29 @@ const InfoApp = await (
 
     App.broadcast = new BroadcastChannel(`info-${rootId}`)
     App.broadcastHandler = event => {
-      console.log('app broadcast', event)
-      streamTitle.innerHTML = event.data[1]
+      const [evt, name, value] = event.data
+      console.log('app broadcast', event, evt)
+      streamTitle.innerHTML = value
+
+      App.state.local[name] = value
       // if (event.data[0] === 'autostart') {}
+    }
+
+    App.pollingHandler = event => {
+      let [url, data] = event.data
+      url = new URL(url)
+      console.log('app polling', event, url)
+
+      if (url.host.indexOf('twitch') > -1) {
+        document.querySelector('.ctrls .status.twitch .viewers strong')
+          .innerHTML = data?.data?.[0]?.viewer_count ?? 0
+        App.state.twitch.video = data?.data?.[0]
+      }
+      if (url.host.indexOf('youtube') > -1) {
+        document.querySelector('.ctrls .status.youtube .viewers strong')
+          .innerHTML = data?.items?.[0]?.liveStreamingDetails?.concurrentViewers ?? 0
+        App.state.youtube.video = data?.items?.[0]
+      }
     }
 
     App.render = function render () {
@@ -212,6 +247,8 @@ const InfoApp = await (
 
       // window.addEventListener('hashchange', App.hashListener)
 
+      window.pollWorker.addEventListener('message', App.pollingHandler)
+
       return App
     }
 
@@ -229,7 +266,11 @@ const InfoApp = await (
         App.init()
       }
 
-      streamData.youtube = await initYoutube(streamData, { store: App.state, cfg })
+      streamData.youtube = await initYoutube(streamData, {
+        store: App.state,
+        cfg,
+        pollWorker: window.pollWorker,
+      })
 
       App.state.youtube = await storeBase64('youtube', {
         broadcast: streamData.youtube.broadcast,
@@ -261,7 +302,8 @@ const InfoApp = await (
             broadcaster_id: parseJwt(App.state.twitch?.id_token)?.sub
           },
           { method: 'GET', },
-          { store: App.state, cfg },
+          { store: App.state, cfg,
+            pollWorker: window.pollWorker, },
         )
       )?.data?.[0]
 
@@ -273,7 +315,12 @@ const InfoApp = await (
             user_id: parseJwt(App.state.twitch?.id_token)?.sub
           },
           { method: 'GET', },
-          { store: App.state, cfg },
+          {
+            store: App.state,
+            cfg,
+            pollWorker: window.pollWorker,
+            poll: true,
+          },
         )
       )?.data?.[0]
 

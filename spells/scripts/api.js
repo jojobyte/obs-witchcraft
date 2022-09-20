@@ -6,6 +6,11 @@ import {
   endpoint,
 } from './constants.js'
 
+// window.pollWorker = window.pollWorker || new Worker('scripts/worker.js')
+// window.pollWorker.onmessage = function(e) {
+//   console.info('api from worker:', e.data)
+// }
+
 // let globalStore = {
 //   youtube: await loadBase64('youtube'),
 //   twitch: await loadBase64('twitch'),
@@ -29,22 +34,32 @@ export async function api (
   {
     store = {},
     cfg = {},
+    ep = 'base',
+    poll = false,
+    pollWorker
   },
 ) {
   if (!store?.[service]?.access_token) {
     return {}
   }
 
-  return await pureApi(
-    `${endpoint[service].base}/${path}?${
-      new URLSearchParams(params)
-    }`,
-    {
-      headers: {
-        ...cfg[service].headers(),
-      },
-      ...init
+  let apiEndpoint = `${endpoint[service][ep]}/${path}?${
+    new URLSearchParams(params)
+  }`
+  let apiOptions = {
+    headers: {
+      ...cfg[service].headers(),
     },
+    ...init
+  }
+
+  if (pollWorker && poll) {
+    pollWorker.postMessage([apiEndpoint, apiOptions])
+  }
+
+  return await pureApi(
+    apiEndpoint,
+    apiOptions,
     {
       204: () => true,
       // 401: () => storeTokenRefresh(service),
@@ -116,16 +131,48 @@ export async function initYoutube(
   {
     store,
     cfg,
+    pollWorker,
   },
 ) {
+  // data.youtube.assets = await api(
+  //   'youtube',
+  //   'partner/v1/assets',
+  //   {
+  //     maxResults: 50,
+  //   },
+  //   {},
+  //   {
+  //     store,
+  //     cfg,
+  //     ep: 'assets',
+  //   },
+  // )
+
+  // console.log('data.youtube.assets init', data.youtube.assets)
+
   data.youtube.broadcasts = await api(
     'youtube',
     'liveBroadcasts',
     {
-      part: ['id','snippet','contentDetails','status', 'statistics'],
+      part: [
+        'id',
+        'snippet',
+        'contentDetails',
+        'status',
+        'statistics',
+      ],
       mine: 'true',
       broadcastType: 'all',
       maxResults: 50,
+      fields: `items(${[
+        'id',
+        'status(lifeCycleStatus,recordingStatus)',
+        // 'status.privacyStatus',
+        'snippet(title,description,liveChatId,scheduledStartTime)',
+        // 'snippet.scheduledEndTime',
+        // 'snippet.actualStartTime',
+        // 'snippet.actualEndTime',
+      ].join`,`})`
     },
     {},
     {
@@ -190,37 +237,52 @@ export async function initYoutube(
 
   console.log('data.youtube.broadcast', data.youtube.broadcast)
 
-  data.youtube.streams = await api(
+  data.youtube.streams = (await api(
     'youtube',
     'liveStreams',
     {
-      part: ['snippet','contentDetails','status'],
+      part: [
+        // 'snippet',
+        // 'contentDetails',
+        'id',
+        'status',
+      ],
       mine: 'true',
+      fields: `items(${[
+        'id',
+        'status',
+      ].join`,`})`
     },
     {},
     {
       store,
       cfg,
     },
-  )
+  ))?.items?.[0]
 
   console.log('data.youtube.streams', data.youtube.streams)
 
   if (data.youtube.broadcast?.id) {
-    data.youtube.video = await api(
+    data.youtube.video = (await api(
       'youtube',
       'videos',
       {
         id: data.youtube.broadcast.id,
         part: ['liveStreamingDetails'],
         // fields: ['items','liveStreamingDetails','concurrentViewers'],
+        fields: `items(${[
+          'id',
+          'liveStreamingDetails',
+        ].join`,`})`
       },
       {},
       {
         store,
         cfg,
+        poll: true,
+        pollWorker,
       },
-    )
+    ))?.items?.[0]
 
     console.log('data.youtube.video', data.youtube.video)
   }
